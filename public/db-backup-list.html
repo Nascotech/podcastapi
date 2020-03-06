@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Theta Technolabs</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+<style>
+    .custab {
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 5% 0;
+        box-shadow: 3px 3px 2px #ccc;
+        transition: 0.5s;
+    }
+
+    .custab:hover {
+        box-shadow: 3px 3px 0px transparent;
+        transition: 0.5s;
+    }
+
+    .no-data {
+        text-align: center;
+    }
+</style>
+<body>
+<div class="container">
+    <hr>
+    <center><h1>All Database Backup</h1></center>
+    <hr>
+
+    <div class="row col-md-12 custyle">
+        <table class="table table-striped custab">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Database Name</th>
+                <th class="text-center">Action</th>
+            </tr>
+            </thead>
+            <tbody id="db-list"></tbody>
+        </table>
+    </div>
+</div>
+<script src="js/jquery.min.js" crossorigin="anonymous"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/db-backup-list.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,9 @@
+{
+  "env": "dev",
+  "mongodb_port": 27017,
+  "port": 5000,
+  "host": "localhost",
+  "db_name": "one_tap_care",
+  "database_backup_days": 2,
+  "from_mail": "no-reply@thetatechnolabs.com"
+}
