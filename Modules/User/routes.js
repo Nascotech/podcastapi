@@ -45,7 +45,7 @@ module.exports = function (router) {
 
     /*Mobile side & Admin side*/
     router.post('/api/signup', UserController.signup, UserController.uploadDefaultPhoto, UserController.signupInfo);
-    router.post('/api/login', UserController.login, UserController.addDeviceInfo, UserController.finalInfo);
+    router.post('/api/login', UserController.login, UserController.finalInfo);
     router.post('/api/logout', VerifyToken, UserController.logout);
     router.post('/api/updateProfile', VerifyToken, userUpload.single('image'), VerifyToken, UserController.editProfile, UserController.unlinkProfilePic, UserController.uploadPhoto, UserController.userFinalRes);
     router.post('/api/changePassword', VerifyToken, UserController.changePassword);
@@ -62,5 +62,6 @@ module.exports = function (router) {
     router.post('/api/checkUserToken', VerifyRecastToken, RecastController.checkUserToken);
     router.post('/api/getOauthToken', RecastController.getOauthToken);
     router.get('/api/getPodcasts', VerifyRecastToken, RecastController.getPodcasts);
+    router.get('/api/getPodcastDetails/:podcastId', VerifyRecastToken, RecastController.getPodcastDetails);
     router.get('/api/getPodcastEpisodes/:podcastId', VerifyRecastToken, RecastController.getPodcastEpisodes);
 };

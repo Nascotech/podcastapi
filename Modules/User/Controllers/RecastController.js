@@ -117,6 +117,32 @@ let RecastCtrl = {
         });
     },
 
+    getPodcastDetails: function (request, response) {
+
+        let input = request.body;
+        let params = request.params;
+
+        let options = {
+            url: input.sgBaseUrl + 'api/v1/sgrecast/podcasts/feeds/view/' + params.podcastId,
+            headers: {
+                Connection: 'keep-alive',
+                Accept: '*/*',
+                Authorization: input.sgTokenType + ' ' + input.sgAccessToken
+            }
+        };
+
+        requestAPI(options, function (err, result, body) {
+            if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err);
+
+            if (result.statusCode == 200) {
+                let finalRes = JSON.parse(result.body);
+                responseHandler.sendResponse(response, finalRes, HttpStatus.OK, "");
+            } else {
+                responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err);
+            }
+        });
+    },
+
     getPodcastEpisodes: function (request, response) {
 
         let params = request.params;

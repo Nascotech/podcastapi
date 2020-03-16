@@ -180,15 +180,10 @@ let User = {
 
         let input = request.body;
 
-        DeviceInfo.findOne({'_id': input.deviceId}, function (err, deviceInfo) {
+        UserModel.findOne({'_id': input.userId}).deepPopulate("role photo").exec(function (err, finalInfo) {
             if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
 
-            UserModel.findOne({'_id': input.userId}).deepPopulate("role photo").exec(function (err, finalInfo) {
-                if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-
-                let finalRes = {"userInfo": finalInfo, "deviceInfo": deviceInfo};
-                responseHandler.sendResponse(response, finalRes, HttpStatus.OK, "");
-            });
+            responseHandler.sendResponse(response, finalInfo, HttpStatus.OK, "");
         });
     },
 
