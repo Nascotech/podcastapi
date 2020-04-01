@@ -61,7 +61,7 @@ module.exports = function (router) {
     //podcast API
     router.post('/api/checkUserToken', VerifyRecastToken, RecastController.checkUserToken);
     router.post('/api/getOauthToken', RecastController.getOauthToken);
-    router.get('/api/getPodcasts', VerifyRecastToken, RecastController.getPodcasts);
+    router.get('/api/getPodcasts/:pageNo', VerifyRecastToken, RecastController.getPodcasts);
     router.get('/api/getPodcastDetails/:podcastId', VerifyRecastToken, RecastController.getPodcastDetails);
     router.get('/api/getPodcastEpisodes/:podcastId', VerifyRecastToken, RecastController.getPodcastEpisodes);
 };

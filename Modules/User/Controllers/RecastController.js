@@ -95,9 +95,10 @@ let RecastCtrl = {
     getPodcasts: function (request, response) {
 
         let input = request.body;
+        let params = request.params;
 
         let options = {
-            url: input.sgBaseUrl + 'api/v1/sgrecast/podcasts/feeds',
+            url: input.sgBaseUrl + 'api/v1/sgrecast/podcasts/feeds/page=' + params.pageNo,
             headers: {
                 Connection: 'keep-alive',
                 Accept: '*/*',
