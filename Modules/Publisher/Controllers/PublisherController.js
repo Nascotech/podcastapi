@@ -15,14 +15,12 @@ let varConst = require('../../../Utils/Constants');
 let stringConstants = require('../../../Utils/StringConstants');
 let responseHandler = require('../../../Utils/ResponseHandler');
 let requestAPI = require('request');
+let arrayDiff = require('simple-array-diff');
 
 //Models
 let UserModel = mongoose.model(constants.UserModel);
 let RolesModel = mongoose.model(constants.RolesModel);
 let PodcastsModel = mongoose.model(constants.PodcastsModel);
-
-let newPodcastArr = [];
-let oldPodcastArr = [];
 
 let Publisher = {
 
@@ -203,15 +201,13 @@ let Publisher = {
         });
     },
 
-    syncPodcastList: function () {
+    syncPodcastList: function (req, res) {
       function allUserList(users) {
           return new Promise(function (resolve, reject) {
               let count = 0;
               users.forEach(async user => {
-                  oldPodcastArr = [];
-                  newPodcastArr = [];
-                  let oldPodcast = await fetchOldPodcastList(user);
-                  await fetchFirstPodcastList(oldPodcast, user, 1);
+                  oldPodcastArr = await fetchOldPodcastList(user);
+                  await fetchFirstPodcastList(user, 1, oldPodcastArr, []);
                   count++;
                   if (users.length == count) {
                       resolve(true);
@@ -222,30 +218,47 @@ let Publisher = {
 
       function fetchOldPodcastList(userInfo) {
         return new Promise(function (resolve, reject) {
-          PodcastsModel.find({"publisher": userInfo.id}, function (err, result) {
+          PodcastsModel.find({"publisher": userInfo.id}).sort({'podcastId': 1}).exec(function (err, result) {
               if (err) reject(err);
               resolve(result);
           });
         });
       }
 
-      function fetchFirstPodcastList(oldPodcastList, userInfo, pageNo) {
+      function fetchFirstPodcastList(userInfo, pageNo, oldPodcastArr, newPodcastArr) {
         return new Promise(async function (resolve, reject) {
           let firstPodcastList = await fetchPodcast(userInfo, pageNo);
+          newPodcastArr = firstPodcastList.data;
           if(firstPodcastList.meta.last_page > 1) {
-            resolve(fetchRemainingPodcast(userInfo, firstPodcastList.meta.last_page));
+            resolve(fetchRemainingPodcast(userInfo, firstPodcastList.meta.last_page, oldPodcastArr, newPodcastArr));
           } else {
-            resolve(true);
+            resolve(podcastDiff(userInfo, oldPodcastArr, newPodcastArr));
           }
         });
       }
 
-      function fetchRemainingPodcast(userInfo, lastPage) {
+      function fetchRemainingPodcast(userInfo, lastPage, oldPodcastArr, newPodcastArr) {
         return new Promise(async function (resolve, reject) {
           for (let i = 2; i <= lastPage; i++) {
-            await fetchPodcast(userInfo, i);
+            let result = await fetchPodcast(userInfo, i);
+            newPodcastArr = newPodcastArr.concat(result.data);
           }
-          resolve(true);
+          resolve(podcastDiff(userInfo, oldPodcastArr, newPodcastArr));
+        });
+      }
+
+      function podcastDiff(userInfo, oldPodcastArr, newPodcastArr) {
+        return new Promise(async function (resolve, reject) {
+          let result = arrayDiff(JSON.parse(JSON.stringify(oldPodcastArr)), JSON.parse(JSON.stringify(newPodcastArr)), 'id');
+          let addPodcast = (result.added.length > 0) ? await syncPodcastListIntoDatabase(result.added, userInfo) : true;
+          let commonPodcast = (result.common.length > 0) ? await syncPodcastListIntoDatabase(result.common, userInfo) : true;
+          let removedPodcast = (result.removed.length > 0) ? await removePodcastFromDatabase(result.removedPodcast, userInfo) : true;
+
+          if(addPodcast && commonPodcast && removedPodcast) {
+            resolve(true);
+          } else {
+            reject(false);
+          }
         });
       }
 
@@ -264,14 +277,7 @@ let Publisher = {
               if (err) reject(err);
 
               if (result.statusCode == 200) {
-                  let finalRes = JSON.parse(result.body);
-                  if(pageNo == 1) {
-                    if(syncPodcastListIntoDatabase(finalRes.data, userInfo)){
-                      resolve(finalRes);
-                    }
-                  } else {
-                    resolve(syncPodcastListIntoDatabase(finalRes.data, userInfo));
-                  }
+                  resolve(JSON.parse(result.body));
               } else {
                   reject(err);
               }
@@ -279,66 +285,88 @@ let Publisher = {
         })
       }
 
+      function removePodcastFromDatabase(podcastLists, userInfo) {
+        return new Promise(function (resolve, reject) {
+          let count = 0;
+          podcastLists.forEach(async podcast => {
+            PodcastsModel.remove({"publisher": userInfo.id, podcastId: podcast.id}).exec(function (err, podcastsModel) {
+              if (err) reject(err);
+
+              count++;
+              if (podcastLists.length == count) {
+                  resolve(true);
+              }
+            });
+          });
+        });
+      }
+
       function syncPodcastListIntoDatabase(podcastLists, userInfo) {
         return new Promise(function (resolve, reject) {
-            let count = 0;
-            podcastLists.forEach(async podcast => {
-                let podcastsModel = new PodcastsModel();
-                podcastsModel.podcastId = podcast.id;
-                podcastsModel.publisher = userInfo.id;
-                podcastsModel.guid = podcast.guid;
-                podcastsModel.name = podcast.name;
-                podcastsModel.description = podcast.description;
-                podcastsModel.language = podcast.language;
-                podcastsModel.link = podcast.link;
-                podcastsModel.xmlFilename = podcast.xmlFilename;
-                podcastsModel.prefixUrl = podcast.prefixUrl;
-                podcastsModel.limit = podcast.limit;
-                podcastsModel.image = podcast.image;
-                podcastsModel.rssFeed = podcast.rssFeed;
-                podcastsModel.categories = podcast.categories;
-                podcastsModel.syndications = podcast.syndications;
-                podcastsModel.awEpisodeId = podcast.awEpisodeId;
-                podcastsModel.awCollectionId = podcast.awCollectionId;
-                podcastsModel.awGenre = podcast.awGenre;
-                podcastsModel.itunesAuthor = podcast.itunesAuthor;
-                podcastsModel.itunesBlock = podcast.itunesBlock;
-                podcastsModel.itunesEmail = podcast.itunesEmail;
-                podcastsModel.itunesExplicit = podcast.itunesExplicit;
-                podcastsModel.itunesKeywords = podcast.itunesKeywords;
-                podcastsModel.itunesLink = podcast.itunesLink;
-                podcastsModel.itunesName = podcast.itunesName;
-                podcastsModel.itunesNewFeed = podcast.itunesNewFeed;
-                podcastsModel.itunesSubtitle = podcast.itunesSubtitle;
-                podcastsModel.itunesSummary = podcast.itunesSummary;
-                podcastsModel.itunesType = podcast.itunesType;
-                podcastsModel.copyright = podcast.copyright;
-                podcastsModel.goooglePlayLink = podcast.goooglePlayLink;
-                podcastsModel.subOverrideLink = podcast.subOverrideLink;
-                podcastsModel.ttl = podcast.ttl;
-                podcastsModel.group = podcast.group;
-                podcastsModel.user = podcast.user;
-                podcastsModel.createdBy = podcast.createdBy;
-                podcastsModel.createdAt = podcast.createdAt;
-                podcastsModel.createdAtTimestamp = podcast.createdAtTimestamp;
-                podcastsModel.updatedAt = podcast.updatedAt;
-                podcastsModel.updatedAtTimestamp = podcast.updatedAtTimestamp;
-                podcastsModel.backgroundColor = podcast.backgroundColor;
-                podcastsModel.primaryColor = podcast.primaryColor;
-                podcastsModel.lighterColor = podcast.lighterColor;
-                podcastsModel.fontSelect = podcast.fontSelect;
-                podcastsModel.disableScrub = podcast.disableScrub;
-                podcastsModel.disableDownload = podcast.disableDownload;
-                podcastsModel.playerAutoCreation = podcast.playerAutoCreation;
-                podcastsModel.save(function (err, result) {
-                    if (err) reject(err);
+          let count = 0;
+          podcastLists.forEach(async podcast => {
 
-                    count++;
-                    if (podcastLists.length == count) {
-                        resolve(true);
-                    }
-                });
+            PodcastsModel.findOne({"publisher": userInfo.id, podcastId:podcast.id}).exec(function (err, podcastsModel) {
+              if (err) reject(err);
+
+              if(!podcastsModel) podcastsModel = new PodcastsModel();
+
+              podcastsModel.podcastId = podcast.id;
+              podcastsModel.publisher = userInfo.id;
+              podcastsModel.guid = podcast.guid;
+              podcastsModel.name = podcast.name;
+              podcastsModel.description = podcast.description;
+              podcastsModel.language = podcast.language;
+              podcastsModel.link = podcast.link;
+              podcastsModel.xmlFilename = podcast.xmlFilename;
+              podcastsModel.prefixUrl = podcast.prefixUrl;
+              podcastsModel.limit = podcast.limit;
+              podcastsModel.image = podcast.image;
+              podcastsModel.rssFeed = podcast.rssFeed;
+              podcastsModel.categories = podcast.categories;
+              podcastsModel.syndications = podcast.syndications;
+              podcastsModel.awEpisodeId = podcast.awEpisodeId;
+              podcastsModel.awCollectionId = podcast.awCollectionId;
+              podcastsModel.awGenre = podcast.awGenre;
+              podcastsModel.itunesAuthor = podcast.itunesAuthor;
+              podcastsModel.itunesBlock = podcast.itunesBlock;
+              podcastsModel.itunesEmail = podcast.itunesEmail;
+              podcastsModel.itunesExplicit = podcast.itunesExplicit;
+              podcastsModel.itunesKeywords = podcast.itunesKeywords;
+              podcastsModel.itunesLink = podcast.itunesLink;
+              podcastsModel.itunesName = podcast.itunesName;
+              podcastsModel.itunesNewFeed = podcast.itunesNewFeed;
+              podcastsModel.itunesSubtitle = podcast.itunesSubtitle;
+              podcastsModel.itunesSummary = podcast.itunesSummary;
+              podcastsModel.itunesType = podcast.itunesType;
+              podcastsModel.copyright = podcast.copyright;
+              podcastsModel.goooglePlayLink = podcast.goooglePlayLink;
+              podcastsModel.subOverrideLink = podcast.subOverrideLink;
+              podcastsModel.ttl = podcast.ttl;
+              podcastsModel.group = podcast.group;
+              podcastsModel.user = podcast.user;
+              podcastsModel.createdBy = podcast.createdBy;
+              podcastsModel.createdAt = podcast.createdAt;
+              podcastsModel.createdAtTimestamp = podcast.createdAtTimestamp;
+              podcastsModel.updatedAt = podcast.updatedAt;
+              podcastsModel.updatedAtTimestamp = podcast.updatedAtTimestamp;
+              podcastsModel.backgroundColor = podcast.backgroundColor;
+              podcastsModel.primaryColor = podcast.primaryColor;
+              podcastsModel.lighterColor = podcast.lighterColor;
+              podcastsModel.fontSelect = podcast.fontSelect;
+              podcastsModel.disableScrub = podcast.disableScrub;
+              podcastsModel.disableDownload = podcast.disableDownload;
+              podcastsModel.playerAutoCreation = podcast.playerAutoCreation;
+              podcastsModel.save(function (err, result) {
+                  if (err) reject(err);
+
+                  count++;
+                  if (podcastLists.length == count) {
+                      resolve(true);
+                  }
+              });
             });
+          });
         })
       }
 

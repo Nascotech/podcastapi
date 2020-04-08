@@ -61,14 +61,12 @@ let schema = new Schema({
     collection: constants.PodcastsModel, autoIndex: true, usePushEach: true,
     toObject: {
         transform: function (doc, obj) {
-            obj.id = obj._id;
-            delete obj._id;
+            obj.id = Number(obj.podcastId);
         }
     },
     toJSON: {
         transform: function (doc, obj) {
-            obj.id = obj._id;
-            delete obj._id;
+            obj.id = Number(obj.podcastId);
         }
     }
 });

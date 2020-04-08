@@ -6,6 +6,7 @@
  */
 let mongoose = require('mongoose');
 let HttpStatus = require('http-status-codes');
+let async = require('async');
 let constants = require('../../../Utils/ModelConstants');
 let varConst = require('../../../Utils/Constants');
 let stringConstants = require('../../../Utils/StringConstants');
@@ -13,6 +14,7 @@ let responseHandler = require('../../../Utils/ResponseHandler');
 let requestAPI = require('request');
 
 let UserModel = mongoose.model(constants.UserModel);
+let PodcastsModel = mongoose.model(constants.PodcastsModel);
 
 let RecastCtrl = {
 
@@ -94,28 +96,45 @@ let RecastCtrl = {
 
     getPodcasts: function (request, response) {
 
-        let input = request.body;
-        let params = request.params;
+      let input = request.body;
 
-        let options = {
-            url: input.sgBaseUrl + 'api/v1/sgrecast/podcasts/feeds?page=' + params.pageNo,
-            headers: {
-                Connection: 'keep-alive',
-                Accept: '*/*',
-                Authorization: input.sgTokenType + ' ' + input.sgAccessToken
-            }
-        };
+      let query = {"publisher": input.userId};
+      let isPagination = (input.isPagination == true) ? true : false;
+      let pageNo = (input.pageNo != null && input.pageNo != '' && input.pageNo != 0 && input.pageNo != "undefined") ? input.pageNo : 1;
+      let pageSize = (input.pageSize != null && input.pageSize != '' && input.pageSize != 0 && input.pageSize != "undefined") ? parseInt(input.pageSize) : varConst.PAGE_SIZE;
 
-        requestAPI(options, function (err, result, body) {
-            if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err);
+      async.parallel({
+          count: function (callback) {
+              PodcastsModel.count(query).exec(function (err, result) {
+                  if (err) responseHandler.sendResponse(response, err, 400, err.name);
 
-            if (result.statusCode == 200) {
-                let finalRes = JSON.parse(result.body);
-                responseHandler.sendResponse(response, finalRes, HttpStatus.OK, "");
-            } else {
-                responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err);
-            }
-        });
+                  callback(err, result);
+              });
+          },
+          list: function (callback) {
+              if (isPagination) {
+                  PodcastsModel.find(query).limit(pageSize).skip((pageNo - 1) * pageSize).sort('-createdAt').exec(function (err, result) {
+                      if (err) responseHandler.sendResponse(response, err, 400, err.name);
+
+                      callback(err, result);
+                  });
+              } else {
+                  PodcastsModel.find(query).sort('-createdAt').exec(function (err, result) {
+                      if (err) responseHandler.sendResponse(response, err, 400, err.name);
+
+                      callback(err, result);
+                  });
+              }
+          },
+      }, function (err, results) {
+          if (err) responseHandler.sendResponse(response, err, 400, err.name);
+
+          let json = {
+              "total": results.count,
+              "list": results.list,
+          };
+          responseHandler.sendResponse(response, json, 200, "");
+      });
     },
 
     getPodcastDetails: function (request, response) {
