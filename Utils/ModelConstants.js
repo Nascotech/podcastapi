@@ -9,3 +9,4 @@ exports.DeviceInfoModel = "device_info";
 exports.PhotosModel = "photos";
 exports.RolesModel = "roles";
 exports.NotificationModel = "notifications";
+exports.PodcastsModel = "podcasts";

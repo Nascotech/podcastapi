@@ -4,5 +4,4 @@
  * Date: 02/03/20
  * Time: 5:16 PM
  */
-
-
+ require('./Models/PodcastsModel');

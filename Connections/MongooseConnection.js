@@ -35,6 +35,7 @@ let helper = {
     importAllModels: function () {
         // body...
         require('../Modules/User/bootstrap.js');
+        require('../Modules/Publisher/bootstrap.js');
     }
 };
 helper.importAllModels();

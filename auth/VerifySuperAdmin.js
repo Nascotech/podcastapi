@@ -30,7 +30,7 @@ function verifySuperAdmin(req, res, next) {
             if (err) return responseHandler.sendResponse(res, err, HttpStatus.BAD_REQUEST, err.name);
             if (!user) return responseHandler.sendResponse(res, "", HttpStatus.NOT_FOUND, 'User not found.');
 
-            if (user.role.slug === varConst.USER) {
+            if (user.role.slug === varConst.PUBLISHER) {
                 responseHandler.sendResponse(res, "", HttpStatus.FORBIDDEN, 'Access Denied')
             } else if (user.isDeleted === varConst.DELETED) {
                 responseHandler.sendResponse(res, err, HttpStatus.UNAUTHORIZED, "Your account is deleted")

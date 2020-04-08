@@ -33,12 +33,12 @@ exports.PASSWORD = "123456";
 
 //default Roles slugs for access admin panel
 exports.SUPER_ADMIN = "super_admin";
-exports.PROVIDER = "provider";
+exports.PUBLISHER = "publisher";
 
 //default role for Array
 exports.DEFAULT_ROLE_ARRAY = [
     "Super Admin",
-    "Provider"
+    "Publisher"
 ];
 
 //default device platform

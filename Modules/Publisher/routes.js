@@ -16,14 +16,21 @@ cron.schedule('0 0 */5 * * *', () => {
     PublisherController.publisherCronjob();
 });
 
+// every 10 min cron job will sync podcast list
+// cron.schedule('*/5 * * * * *', () => {
+//     PublisherController.syncPodcastList();
+// });
+
 module.exports = function (router) {
     // get Method
-    router.get('/api/changeStatus/:userId', VerifySuperAdmin, PublisherController.changeStatus, PublisherController.publisherInfo);
-    router.get('/api/removeUser/:userId', VerifySuperAdmin, PublisherController.removeUser);
+    router.get('/api/changeStatus/:publisherId', VerifySuperAdmin, PublisherController.changeStatus, PublisherController.publisherInfo);
+    router.get('/api/removeUser/:publisherId', VerifySuperAdmin, PublisherController.removeUser);
+
+    router.get('/api/test', PublisherController.syncPodcastList)
 
     //post Method
-    router.post('/api/publisher_signup', VerifySuperAdmin, PublisherController.addPublisher, PublisherController.publisherInfo);
-    router.post('/api/publisher_update', VerifySuperAdmin, PublisherController.updatePublisher, PublisherController.publisherInfo);
-    router.post('/api/publisher_list', VerifySuperAdmin, PublisherController.providerList);
+    router.post('/api/publisherSignup', VerifySuperAdmin, PublisherController.addPublisher, PublisherController.publisherInfo);
+    router.post('/api/publisherUpdate', VerifySuperAdmin, PublisherController.updatePublisher, PublisherController.publisherInfo);
+    router.post('/api/publisherList', VerifySuperAdmin, PublisherController.providerList);
 
 };

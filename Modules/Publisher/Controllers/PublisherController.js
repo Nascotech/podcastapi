@@ -14,19 +14,24 @@ let constants = require('../../../Utils/ModelConstants');
 let varConst = require('../../../Utils/Constants');
 let stringConstants = require('../../../Utils/StringConstants');
 let responseHandler = require('../../../Utils/ResponseHandler');
+let requestAPI = require('request');
 
 //Models
 let UserModel = mongoose.model(constants.UserModel);
 let RolesModel = mongoose.model(constants.RolesModel);
+let PodcastsModel = mongoose.model(constants.PodcastsModel);
+
+let newPodcastArr = [];
+let oldPodcastArr = [];
 
 let Publisher = {
 
     addPublisher: function (request, response, next) {
         let input = request.body;
-        UserModel.findOne({'email': input.email.toLowerCase()}, function (err, provider) {
+        UserModel.findOne({'email': input.email.toLowerCase()}, function (err, publisher) {
             if (err) responseHandler.sendResponse(response, "", HttpStatus.INTERNAL_SERVER_ERROR, stringConstants.InternalServerError);
-            if (provider) responseHandler.sendResponse(response, "", HttpStatus.BAD_REQUEST, stringConstants.UserAlreadyExist);
-            RolesModel.findOne({'slug': varConst.PROVIDER}, function (err, roleInfo) {
+            if (publisher) responseHandler.sendResponse(response, "", HttpStatus.BAD_REQUEST, stringConstants.UserAlreadyExist);
+            RolesModel.findOne({'slug': varConst.PUBLISHER}, function (err, roleInfo) {
                 if (err) responseHandler.sendResponse(response, "", HttpStatus.INTERNAL_SERVER_ERROR, stringConstants.InternalServerError);
                 let userModel = new UserModel();
                 userModel.email = input.email.toLowerCase();
@@ -53,19 +58,19 @@ let Publisher = {
 
     updatePublisher: function (request, response, next) {
         let input = request.body;
-        UserModel.findOne({'_id': input.providerId}, function (err, provider) {
+        UserModel.findOne({'_id': input.publisherId}, function (err, publisher) {
             if (err) responseHandler.sendResponse(response, "", HttpStatus.INTERNAL_SERVER_ERROR, stringConstants.InternalServerError);
-            if (provider) {
-                provider.firstName = input.firstName;
-                provider.lastName = input.lastName;
-                provider.isResetPassword = varConst.ACTIVE;
-                provider.sgBaseUrl = input.baseUrl;
-                provider.sgScope = input.scope;
-                provider.sgClientId = input.clientId;
-                provider.sgGrantType = input.grantType;
-                provider.sgClientSecret = input.clientSecret;
-                provider.sgPassword = input.password;
-                provider.save(function (error, finalRes) {
+            if (publisher) {
+                publisher.firstName = input.firstName;
+                publisher.lastName = input.lastName;
+                publisher.isResetPassword = varConst.ACTIVE;
+                publisher.sgBaseUrl = input.baseUrl;
+                publisher.sgScope = input.scope;
+                publisher.sgClientId = input.clientId;
+                publisher.sgGrantType = input.grantType;
+                publisher.sgClientSecret = input.clientSecret;
+                publisher.sgPassword = input.password;
+                publisher.save(function (error, finalRes) {
                     if (error) responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
                     request.body.userId = finalRes.id;
                     next();
@@ -81,7 +86,7 @@ let Publisher = {
         let pageNo = (input.pageNo != null && input.pageNo != '' && input.pageNo != 0 && input.pageNo != "undefined") ? input.pageNo : 1;
         let pageSize = (input.pageSize != null && input.pageSize != '' && input.pageSize != 0 && input.pageSize != "undefined") ? parseInt(input.pageSize) : varConst.PAGE_SIZE;
 
-        RolesModel.findOne({slug: varConst.PROVIDER}).exec(function (err, roles) {
+        RolesModel.findOne({slug: varConst.PUBLISHER}).exec(function (err, roles) {
             if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
             let query = {role: roles.id};
             async.parallel({
@@ -110,7 +115,7 @@ let Publisher = {
 
     changeStatus: function (request, response, next) {
         let params = request.params;
-        UserModel.findOne({'_id': params.userId}).exec(function (err, user) {
+        UserModel.findOne({'_id': params.publisherId}).exec(function (err, user) {
             if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
             if (user.isActive == varConst.INACTIVE) {
                 user.isActive = varConst.ACTIVE;
@@ -127,7 +132,7 @@ let Publisher = {
 
     removeUser: function (request, response) {
         let params = request.params;
-        UserModel.findOne({'_id': params.userId}).exec(function (err, user) {
+        UserModel.findOne({'_id': params.publisherId}).exec(function (err, user) {
             if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
             user.isDeleted = varConst.DELETED;
             user.save(function (error, finalRes) {
@@ -146,18 +151,6 @@ let Publisher = {
     },
 
     publisherCronjob: function (req, res) {
-        let RoleUserModel = function (req, res) {
-            return new Promise(function (resolve, reject) {
-                RolesModel.findOne({slug: varConst.PROVIDER}, function (err, result) {
-                    if (err) reject(err);
-                    UserModel.find({role: result.id}, function (err, result) {
-                        if (err) reject(err);
-                        resolve(result);
-                    })
-                })
-            })
-        }
-
         function TokenRefreshModel(users) {
             return new Promise(function (resolve, reject) {
                 let count = 0;
@@ -208,7 +201,166 @@ let Publisher = {
         }).catch(err => {
             console.log("err", err);
         });
-    }
+    },
 
+    syncPodcastList: function () {
+      function allUserList(users) {
+          return new Promise(function (resolve, reject) {
+              let count = 0;
+              users.forEach(async user => {
+                  oldPodcastArr = [];
+                  newPodcastArr = [];
+                  let oldPodcast = await fetchOldPodcastList(user);
+                  await fetchFirstPodcastList(oldPodcast, user, 1);
+                  count++;
+                  if (users.length == count) {
+                      resolve(true);
+                  }
+              })
+          })
+      }
+
+      function fetchOldPodcastList(userInfo) {
+        return new Promise(function (resolve, reject) {
+          PodcastsModel.find({"publisher": userInfo.id}, function (err, result) {
+              if (err) reject(err);
+              resolve(result);
+          });
+        });
+      }
+
+      function fetchFirstPodcastList(oldPodcastList, userInfo, pageNo) {
+        return new Promise(async function (resolve, reject) {
+          let firstPodcastList = await fetchPodcast(userInfo, pageNo);
+          if(firstPodcastList.meta.last_page > 1) {
+            resolve(fetchRemainingPodcast(userInfo, firstPodcastList.meta.last_page));
+          } else {
+            resolve(true);
+          }
+        });
+      }
+
+      function fetchRemainingPodcast(userInfo, lastPage) {
+        return new Promise(async function (resolve, reject) {
+          for (let i = 2; i <= lastPage; i++) {
+            await fetchPodcast(userInfo, i);
+          }
+          resolve(true);
+        });
+      }
+
+      function fetchPodcast(userInfo, pageNo) {
+        return new Promise(function (resolve, reject) {
+          let options = {
+              url: userInfo.sgBaseUrl + 'api/v1/sgrecast/podcasts/feeds?page=' + pageNo,
+              headers: {
+                  Connection: 'keep-alive',
+                  Accept: '*/*',
+                  Authorization: userInfo.sgTokenType + ' ' + userInfo.sgAccessToken
+              }
+          };
+
+          requestAPI(options, function (err, result, body) {
+              if (err) reject(err);
+
+              if (result.statusCode == 200) {
+                  let finalRes = JSON.parse(result.body);
+                  if(pageNo == 1) {
+                    if(syncPodcastListIntoDatabase(finalRes.data, userInfo)){
+                      resolve(finalRes);
+                    }
+                  } else {
+                    resolve(syncPodcastListIntoDatabase(finalRes.data, userInfo));
+                  }
+              } else {
+                  reject(err);
+              }
+          });
+        })
+      }
+
+      function syncPodcastListIntoDatabase(podcastLists, userInfo) {
+        return new Promise(function (resolve, reject) {
+            let count = 0;
+            podcastLists.forEach(async podcast => {
+                let podcastsModel = new PodcastsModel();
+                podcastsModel.podcastId = podcast.id;
+                podcastsModel.publisher = userInfo.id;
+                podcastsModel.guid = podcast.guid;
+                podcastsModel.name = podcast.name;
+                podcastsModel.description = podcast.description;
+                podcastsModel.language = podcast.language;
+                podcastsModel.link = podcast.link;
+                podcastsModel.xmlFilename = podcast.xmlFilename;
+                podcastsModel.prefixUrl = podcast.prefixUrl;
+                podcastsModel.limit = podcast.limit;
+                podcastsModel.image = podcast.image;
+                podcastsModel.rssFeed = podcast.rssFeed;
+                podcastsModel.categories = podcast.categories;
+                podcastsModel.syndications = podcast.syndications;
+                podcastsModel.awEpisodeId = podcast.awEpisodeId;
+                podcastsModel.awCollectionId = podcast.awCollectionId;
+                podcastsModel.awGenre = podcast.awGenre;
+                podcastsModel.itunesAuthor = podcast.itunesAuthor;
+                podcastsModel.itunesBlock = podcast.itunesBlock;
+                podcastsModel.itunesEmail = podcast.itunesEmail;
+                podcastsModel.itunesExplicit = podcast.itunesExplicit;
+                podcastsModel.itunesKeywords = podcast.itunesKeywords;
+                podcastsModel.itunesLink = podcast.itunesLink;
+                podcastsModel.itunesName = podcast.itunesName;
+                podcastsModel.itunesNewFeed = podcast.itunesNewFeed;
+                podcastsModel.itunesSubtitle = podcast.itunesSubtitle;
+                podcastsModel.itunesSummary = podcast.itunesSummary;
+                podcastsModel.itunesType = podcast.itunesType;
+                podcastsModel.copyright = podcast.copyright;
+                podcastsModel.goooglePlayLink = podcast.goooglePlayLink;
+                podcastsModel.subOverrideLink = podcast.subOverrideLink;
+                podcastsModel.ttl = podcast.ttl;
+                podcastsModel.group = podcast.group;
+                podcastsModel.user = podcast.user;
+                podcastsModel.createdBy = podcast.createdBy;
+                podcastsModel.createdAt = podcast.createdAt;
+                podcastsModel.createdAtTimestamp = podcast.createdAtTimestamp;
+                podcastsModel.updatedAt = podcast.updatedAt;
+                podcastsModel.updatedAtTimestamp = podcast.updatedAtTimestamp;
+                podcastsModel.backgroundColor = podcast.backgroundColor;
+                podcastsModel.primaryColor = podcast.primaryColor;
+                podcastsModel.lighterColor = podcast.lighterColor;
+                podcastsModel.fontSelect = podcast.fontSelect;
+                podcastsModel.disableScrub = podcast.disableScrub;
+                podcastsModel.disableDownload = podcast.disableDownload;
+                podcastsModel.playerAutoCreation = podcast.playerAutoCreation;
+                podcastsModel.save(function (err, result) {
+                    if (err) reject(err);
+
+                    count++;
+                    if (podcastLists.length == count) {
+                        resolve(true);
+                    }
+                });
+            });
+        })
+      }
+
+      RoleUserModel().then(users => {
+          return allUserList(users);
+      }).then(token => {
+          console.log("success");
+      }).catch(err => {
+          console.log("err", err);
+      });
+    },
 };
 module.exports = Publisher;
+
+let RoleUserModel = function (req, res) {
+    return new Promise(function (resolve, reject) {
+        RolesModel.findOne({slug: varConst.PUBLISHER}, function (err, result) {
+            if (err) reject(err);
+            UserModel.find({role: result.id}, function (err, result) {
+                if (err) reject(err);
+                resolve(result);
+            })
+        })
+    })
+}
