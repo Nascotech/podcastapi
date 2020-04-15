@@ -98,10 +98,12 @@ let RecastCtrl = {
 
       let input = request.body;
 
-      let query = {"publisher": input.userId};
       let isPagination = (input.isPagination == true) ? true : false;
       let pageNo = (input.pageNo != null && input.pageNo != '' && input.pageNo != 0 && input.pageNo != "undefined") ? input.pageNo : 1;
       let pageSize = (input.pageSize != null && input.pageSize != '' && input.pageSize != 0 && input.pageSize != "undefined") ? parseInt(input.pageSize) : varConst.PAGE_SIZE;
+      let group = (input.groupId != null && input.groupId != '' && input.groupId != 0 && input.groupId != "undefined") ? {"group": input.groupId} : {};
+
+      let query = {$and: [{"publisher": input.userId}, group]};
 
       async.parallel({
           count: function (callback) {
@@ -188,6 +190,34 @@ let RecastCtrl = {
             }
         });
     },
+
+    getGroups: function(request, response) {
+
+      let input = request.body;
+
+      let pageNo = (input.pageNo != null && input.pageNo != '' && input.pageNo != 0 && input.pageNo != "undefined") ? input.pageNo : 1;
+
+      let options = {
+          method: 'GET',
+          url: input.sgBaseUrl + 'api/v1/groups?page=' + pageNo,
+          headers: {
+              Connection: 'keep-alive',
+              Accept: '*/*',
+              Authorization: input.sgTokenType + ' ' + input.sgAccessToken
+          }
+      };
+
+      requestAPI(options, function (err, result, body) {
+          if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err);
+
+          if (result.statusCode == 200) {
+              let finalRes = JSON.parse(result.body);
+              responseHandler.sendResponse(response, finalRes, HttpStatus.OK, "");
+          } else {
+              responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err);
+          }
+      });
+    }
 };
 
 module.exports = RecastCtrl;

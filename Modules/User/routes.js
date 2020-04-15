@@ -64,4 +64,5 @@ module.exports = function (router) {
     router.post('/api/getPodcasts', VerifyRecastToken, RecastController.getPodcasts);
     router.get('/api/getPodcastDetails/:podcastId', VerifyRecastToken, RecastController.getPodcastDetails);
     router.get('/api/getPodcastEpisodes/:podcastId', VerifyRecastToken, RecastController.getPodcastEpisodes);
+    router.post('/api/getGroups', VerifyRecastToken, RecastController.getGroups);
 };

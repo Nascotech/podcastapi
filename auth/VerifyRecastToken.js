@@ -15,8 +15,6 @@ function VerifyRecastToken(req, res, next) {
     // check header or url parameters or post parameters for token
     let token = req.headers['access_token'];
 
-    console.log(token);
-
     if (!token) return responseHandler.sendResponse(res, "", HttpStatus.BAD_REQUEST, "'No token provided.'");
 
     function getUserModel(token) {

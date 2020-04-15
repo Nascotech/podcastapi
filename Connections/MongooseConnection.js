@@ -10,7 +10,11 @@ let defaultConfig = require('../Configs/masterConfig');
 let uri = 'mongodb://' + defaultConfig['host'] + ':' + defaultConfig['mongodb_port'] + '/' + defaultConfig["db_name"];
 
 let connectMongoose = function () {
-    mongoose.connect(uri);
+    mongoose.connect(uri,{
+      useNewUrlParser: true,
+      useCreateIndex: true,
+      useUnifiedTopology: true
+    });
 };
 
 connectMongoose();
