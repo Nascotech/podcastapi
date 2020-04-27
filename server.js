@@ -86,9 +86,9 @@ if (dev) {
     });
 } else {
     https.createServer({
-        key: fs.readFileSync('/etc/letsencrypt/live/host_or_ip/your_privkey.pem'),
-        cert: fs.readFileSync('/etc/letsencrypt/live/host_or_ip/your_cert.pem'),
-        ca: fs.readFileSync('/etc/letsencrypt/live/host_or_ip/your_chain.pem')
+        key: fs.readFileSync('/etc/letsencrypt/live/atunwapodcasts.com/privkey.pem'),
+        cert: fs.readFileSync('/etc/letsencrypt/live/atunwapodcasts.com/cert.pem'),
+        ca: fs.readFileSync('/etc/letsencrypt/live/atunwapodcasts.com/chain.pem')
     }, app).listen(app.get('port'), () => {
         util.log('Express server listening on port ' + port);
     });
