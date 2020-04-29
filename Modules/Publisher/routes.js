@@ -17,7 +17,7 @@ cron.schedule('0 0 */5 * * *', () => {
 });
 
 // every 3 hour cron job will sync podcast list
-cron.schedule('0 */5 * * * *', () => {
+cron.schedule('0 0 */3 * * *', () => {
     PublisherController.syncPodcastList();
 });
 
