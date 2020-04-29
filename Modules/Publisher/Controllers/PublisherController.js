@@ -252,9 +252,8 @@ let Publisher = {
           let result = arrayDiff(JSON.parse(JSON.stringify(oldPodcastArr)), JSON.parse(JSON.stringify(newPodcastArr)), 'id');
           let addPodcast = (result.added.length > 0) ? await syncPodcastListIntoDatabase(result.added, userInfo) : true;
           let commonPodcast = (result.common.length > 0) ? await syncPodcastListIntoDatabase(result.common, userInfo) : true;
-          let removedPodcast = (result.removed.length > 0) ? await removePodcastFromDatabase(result.removedPodcast, userInfo) : true;
+          let removedPodcast = (result.removed.length > 0) ? await removePodcastFromDatabase(result.removed, userInfo) : true;
 
-          console.log(result.added.length, result.common.length, result.removed.length);
           if(addPodcast && commonPodcast && removedPodcast) {
             resolve(true);
           } else {
@@ -290,7 +289,6 @@ let Publisher = {
         return new Promise(function (resolve, reject) {
           let count = 0;
           podcastLists.forEach(async podcast => {
-            console.log(podcast.id);
             PodcastsModel.remove({"publisher": userInfo.id, podcastId: podcast.id}).exec(function (err, podcastsModel) {
               if (err) reject(err);
 
