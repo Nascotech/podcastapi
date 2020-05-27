@@ -20,6 +20,7 @@
     "mkdirp": "^1.0.4",
     "mongoose": "^5.9.9",
     "mongoose-deep-populate": "^3.1.1",
+    "mongoose-validation-error-transform": "0.0.5",
     "morgan": "^1.10.0",
     "multer": "^1.4.2",
     "node-array": "0.0.7",

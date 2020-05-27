@@ -8,6 +8,7 @@ let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
 let constants = require('../../../Utils/ModelConstants');
 let deepPopulate = require('mongoose-deep-populate')(mongoose);
+let mongooseValidationErrorTransform = require('mongoose-validation-error-transform');
 let schema = new Schema({
 
     originalName: {type: String, required: true},
@@ -31,4 +32,11 @@ let schema = new Schema({
     }
 });
 schema.plugin(deepPopulate);
+mongoose.plugin(mongooseValidationErrorTransform, {
+  capitalize: true,
+  humanize: true,
+  transform: function(messages) {
+    return messages;
+  }
+});
 mongoose.model(constants.PhotosModel, schema);

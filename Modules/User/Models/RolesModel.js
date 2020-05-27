@@ -9,6 +9,7 @@ let Schema = mongoose.Schema;
 let constants = require('../../../Utils/ModelConstants');
 let varConst = require('../../../Utils/Constants');
 let deepPopulate = require('mongoose-deep-populate')(mongoose);
+let mongooseValidationErrorTransform = require('mongoose-validation-error-transform');
 let schema = new Schema({
 
     roleName: {type: String, required: true},
@@ -31,4 +32,11 @@ let schema = new Schema({
     }
 });
 schema.plugin(deepPopulate);
+mongoose.plugin(mongooseValidationErrorTransform, {
+  capitalize: true,
+  humanize: true,
+  transform: function(messages) {
+    return messages;
+  }
+});
 mongoose.model(constants.RolesModel, schema);

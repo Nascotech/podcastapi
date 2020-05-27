@@ -9,6 +9,7 @@ let Schema = mongoose.Schema;
 let constants = require('../../../Utils/ModelConstants');
 let deepPopulate = require('mongoose-deep-populate')(mongoose);
 let varConst = require('../../../Utils/Constants');
+let mongooseValidationErrorTransform = require('mongoose-validation-error-transform');
 let schema = new Schema({
 
     publisher: {type: String, required: true, ref: constants.UserModel},
@@ -71,4 +72,11 @@ let schema = new Schema({
     }
 });
 schema.plugin(deepPopulate);
+mongoose.plugin(mongooseValidationErrorTransform, {
+  capitalize: true,
+  humanize: true,
+  transform: function(messages) {
+    return messages;
+  }
+});
 mongoose.model(constants.PodcastsModel, schema);

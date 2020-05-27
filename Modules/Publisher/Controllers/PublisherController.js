@@ -8,6 +8,7 @@ let mongoose = require('mongoose');
 let HttpStatus = require('http-status-codes');
 let async = require('async');
 let path = require('path');
+let fs = require('fs');
 let bcrypt = require('bcryptjs');
 let request = require('request');
 let constants = require('../../../Utils/ModelConstants');
@@ -21,131 +22,275 @@ let arrayDiff = require('simple-array-diff');
 let UserModel = mongoose.model(constants.UserModel);
 let RolesModel = mongoose.model(constants.RolesModel);
 let PodcastsModel = mongoose.model(constants.PodcastsModel);
+let PhotosModel = mongoose.model(constants.PhotosModel);
 
 let Publisher = {
 
+    getPublisherRole: function (request, response, next) {
+      RolesModel.findOne({'slug': varConst.PUBLISHER}, function (err, roleInfo) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          request.body.roleId = roleInfo.id;
+          next();
+        }
+      });
+    },
+
     addPublisher: function (request, response, next) {
-        let input = request.body;
-        UserModel.findOne({'email': input.email.toLowerCase()}, function (err, publisher) {
-            if (err) responseHandler.sendResponse(response, "", HttpStatus.INTERNAL_SERVER_ERROR, stringConstants.InternalServerError);
-            if (publisher) responseHandler.sendResponse(response, "", HttpStatus.BAD_REQUEST, stringConstants.UserAlreadyExist);
-            RolesModel.findOne({'slug': varConst.PUBLISHER}, function (err, roleInfo) {
-                if (err) responseHandler.sendResponse(response, "", HttpStatus.INTERNAL_SERVER_ERROR, stringConstants.InternalServerError);
-                let userModel = new UserModel();
-                userModel.email = input.email.toLowerCase();
-                userModel.firstName = input.firstName;
-                userModel.lastName = input.lastName;
-                userModel.password = bcrypt.hashSync(varConst.PASSWORD, 8);
-                userModel.role = roleInfo.id;
-                userModel.isResetPassword = varConst.ACTIVE;
-                userModel.sgBaseUrl = input.baseUrl;
-                userModel.sgUsername = input.email.toLowerCase();
-                userModel.sgScope = input.scope;
-                userModel.sgClientId = input.clientId;
-                userModel.sgGrantType = input.grantType;
-                userModel.sgClientSecret = input.clientSecret;
-                userModel.sgPassword = input.password;
-                userModel.save(function (error, finalRes) {
-                    if (error) responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
-                    request.body.userId = finalRes.id;
-                    next();
-                });
-            });
-        });
+
+      let input = request.body;
+      UserModel.findOne({'email': input.email.toLowerCase()}, function (err, publisher) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else if (publisher) {
+          responseHandler.sendSuccess(response, "", stringConstants.UserAlreadyExist);
+        } else {
+          let userModel = new UserModel();
+          userModel.email = input.email.toLowerCase();
+          userModel.publisherName = input.publisherName;
+          userModel.fullName = input.fullName;
+          userModel.domain = input.domain;
+          userModel.registeredDate = input.registeredDate;
+          userModel.password = bcrypt.hashSync(varConst.PASSWORD, 8);
+          userModel.role = input.roleId;
+          userModel.sgUsername = input.sgUsername.toLowerCase();
+          userModel.sgBaseUrl = input.sgBaseUrl;
+          userModel.sgScope = input.sgScope;
+          userModel.sgClientId = input.sgClientId;
+          userModel.sgGrantType = input.sgGrantType;
+          userModel.sgTokenType = input.sgTokenType;
+          userModel.sgClientSecret = input.sgClientSecret;
+          userModel.sgPassword = input.password;
+          userModel.headerColor = input.headerColor;
+          userModel.footerColor = input.footerColor;
+          userModel.headerScript = input.headerScript;
+          userModel.sidebar1 = input.sidebar1;
+          userModel.sidebar2 = input.sidebar2;
+          userModel.sidebar3 = input.sidebar3;
+          userModel.sidebar4 = input.sidebar4;
+          userModel.leaderboard1 = input.leaderboard1;
+          userModel.isResetPassword = varConst.ACTIVE;
+          userModel.isActive = input.isActive;
+          userModel.save(function (err, finalRes) {
+            if (err) {
+              responseHandler.sendSuccess(response, err, err.name);
+            } else {
+              request.body.userId = finalRes.id;
+              next();
+            }
+          });
+        }
+      });
     },
 
     updatePublisher: function (request, response, next) {
-        let input = request.body;
-        UserModel.findOne({'_id': input.publisherId}, function (err, publisher) {
-            if (err) responseHandler.sendResponse(response, "", HttpStatus.INTERNAL_SERVER_ERROR, stringConstants.InternalServerError);
-            if (publisher) {
-                publisher.firstName = input.firstName;
-                publisher.lastName = input.lastName;
-                publisher.isResetPassword = varConst.ACTIVE;
-                publisher.sgBaseUrl = input.baseUrl;
-                publisher.sgScope = input.scope;
-                publisher.sgClientId = input.clientId;
-                publisher.sgGrantType = input.grantType;
-                publisher.sgClientSecret = input.clientSecret;
-                publisher.sgPassword = input.password;
-                publisher.save(function (error, finalRes) {
-                    if (error) responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
-                    request.body.userId = finalRes.id;
-                    next();
-                });
+
+      let input = request.body;
+
+      UserModel.findOne({'_id': input.publisherId}, function (err, userModel) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          userModel.email = input.email.toLowerCase();
+          userModel.publisherName = input.publisherName;
+          userModel.fullName = input.fullName;
+          userModel.domain = input.domain;
+          userModel.registeredDate = input.registeredDate;
+          userModel.sgUsername = input.sgUsername.toLowerCase();
+          userModel.sgBaseUrl = input.sgBaseUrl;
+          userModel.sgScope = input.sgScope;
+          userModel.sgClientId = input.sgClientId;
+          userModel.sgGrantType = input.sgGrantType;
+          userModel.sgTokenType = input.sgTokenType;
+          userModel.sgClientSecret = input.sgClientSecret;
+          userModel.sgPassword = input.password;
+          userModel.headerColor = input.headerColor;
+          userModel.footerColor = input.footerColor;
+          userModel.headerScript = input.headerScript;
+          userModel.sidebar1 = input.sidebar1;
+          userModel.sidebar2 = input.sidebar2;
+          userModel.sidebar3 = input.sidebar3;
+          userModel.sidebar4 = input.sidebar4;
+          userModel.leaderboard1 = input.leaderboard1;
+          userModel.isActive = input.isActive;
+          userModel.save(function (err, finalRes) {
+            if (err) {
+              responseHandler.sendSuccess(response, err, err.name);
             } else {
-                responseHandler.sendResponse(response, "", HttpStatus.BAD_REQUEST, stringConstants.UserAlreadyExist);
+              request.body.oldPhotoId = finalRes.photo;
+              request.body.userId = finalRes.id;
+              next();
             }
-        });
+          });
+        }
+      });
     },
 
-    providerList: function (request, response) {
-        let input = request.body;
-        let pageNo = (input.pageNo != null && input.pageNo != '' && input.pageNo != 0 && input.pageNo != "undefined") ? input.pageNo : 1;
-        let pageSize = (input.pageSize != null && input.pageSize != '' && input.pageSize != 0 && input.pageSize != "undefined") ? parseInt(input.pageSize) : varConst.PAGE_SIZE;
+    unlinkPhoto: function (request, response, next) {
 
-        RolesModel.findOne({slug: varConst.PUBLISHER}).exec(function (err, roles) {
-            if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-            let query = {role: roles.id};
-            async.parallel({
-                count: function (callback) {
-                    UserModel.count(query).exec(function (error, result) {
-                        if (error) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-                        callback(error, result);
-                    });
-                },
-                list: function (callback) {
-                    UserModel.find(query, function (err, result) {
-                        if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err);
-                        callback(err, result);
-                    });
-                },
-            }, function (err, results) {
-                if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-                let json = {
-                    "list": results.list,
-                    "count": results.count
-                };
-                responseHandler.sendResponse(response, json, HttpStatus.OK, "");
+      let input = request.body;
+
+      if (request.file) {
+        PhotosModel.findOne({'_id': mongoose.Types.ObjectId(input.oldPhotoId)}, function (err, photoModel) {
+          if (err){
+            responseHandler.sendInternalServerError(response, err, err.name);
+          } else if (!photoModel) {
+            next();
+          } else {
+            fs.exists(photoModel.path, function (exists) {
+              if (exists) {
+                fs.unlink(photoModel.path, function (err) {
+                  photoModel.remove();
+                  next();
+                });
+              } else {
+                photoModel.remove();
+                next();
+              }
             });
+          }
         });
+      } else {
+        next();
+      }
+    },
+
+    uploadPhoto: function (request, response, next) {
+
+      let input = request.body;
+
+      if (request.file) {
+        let photosModel = new PhotosModel;
+        photosModel.originalName = request.file.originalname;
+        photosModel.fileName = request.file.filename;
+        photosModel.destination = request.file.destination;
+        photosModel.path = request.file.path;
+        photosModel.size = request.file.size;
+        photosModel.save((err, photo) => {
+          if (err) {
+            responseHandler.sendSuccess(response, err, err.name);
+          } else {
+            UserModel.findOne({_id: mongoose.Types.ObjectId(input.userId)}, function (err, userModel) {
+              if (err) {
+                responseHandler.sendInternalServerError(response, err, err.name);
+              } else {
+                userModel.photo = mongoose.Types.ObjectId(photo.id);
+                userModel.save((err, result) => {
+                  if (err) {
+                    responseHandler.sendInternalServerError(response, err, err.name);
+                  } else {
+                    next();
+                  }
+                });
+              }
+            });
+          }
+        });
+      } else {
+        next();
+      }
+    },
+
+    publisherList: function (request, response) {
+
+      let input = request.body;
+      let params = request.query;
+
+      let pageNo = (params.pageNo != null && params.pageNo != '' && params.pageNo != 0 && params.pageNo != "undefined") ? params.pageNo : 1;
+      let pageSize = (params.pageSize != null && params.pageSize != '' && params.pageSize != 0 && params.pageSize != "undefined") ? parseInt(params.pageSize) : varConst.PAGE_SIZE;
+      let searchQ = (params.keyword != null && params.keyword != '' && params.keyword != "undefined") ? {
+        $or: [
+            {fullName: {'$regex': params.keyword, '$options': 'i'}},
+            {publisherName: {'$regex': params.keyword, '$options': 'i'}},
+            {email: {'$regex': params.keyword, '$options': 'i'}}
+        ]
+      } : {};
+
+      let query = {$and: [{'isDeleted': varConst.NOT_DELETED}, {'role': input.roleId}, searchQ]};
+
+      async.parallel({
+        count: function (callback) {input
+          UserModel.count(query).exec(function (err, result) {
+            if (err) {
+              responseHandler.sendInternalServerError(response, err, err.name);
+            } else {
+              callback(err, result);
+            }
+          });
+        },
+        list: function (callback) {
+          UserModel.find(query).deepPopulate('role photo').exec(function (err, result) {
+            if (err) {
+              responseHandler.sendInternalServerError(response, err, err.name);
+            } else {
+              callback(err, result);
+            }
+          });
+        },
+      }, function (err, results) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          responseHandler.sendSuccess(response, {
+            "count": results.count,
+            "list": results.list
+          });
+        }
+      });
     },
 
     changeStatus: function (request, response, next) {
-        let params = request.params;
-        UserModel.findOne({'_id': params.publisherId}).exec(function (err, user) {
-            if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-            if (user.isActive == varConst.INACTIVE) {
-                user.isActive = varConst.ACTIVE;
-            } else if (user.isActive == varConst.ACTIVE) {
-                user.isActive = varConst.INACTIVE;
+      let params = request.params;
+
+      UserModel.findOne({'_id': params.publisherId}).exec(function (err, user) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          user.isActive = (user.isActive == varConst.INACTIVE) ? varConst.ACTIVE : varConst.INACTIVE;
+          user.save(function (error, finalRes) {
+            if (err) {
+              responseHandler.sendSuccess(response, err, err.name);
+            } else {
+              request.body.userId = finalRes.id;
+              next();
             }
-            user.save(function (error, finalRes) {
-                if (error) responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
-                request.body.userId = finalRes.id;
-                next();
-            });
-        });
+          });
+        }
+      });
     },
 
-    removeUser: function (request, response) {
-        let params = request.params;
-        UserModel.findOne({'_id': params.publisherId}).exec(function (err, user) {
-            if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-            user.isDeleted = varConst.DELETED;
-            user.save(function (error, finalRes) {
-                if (error) responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
-                responseHandler.sendResponse(response, "User Successfully Removed", HttpStatus.OK, "");
-            });
-        });
+    removePublisher: function (request, response, next) {
+      let params = request.params;
+
+      UserModel.findOne({'_id': params.publisherId}).exec(function (err, user) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          user.isDeleted = varConst.DELETED;
+          user.save(function (error, finalRes) {
+            if (err) {
+              responseHandler.sendSuccess(response, err, err.name);
+            } else {
+              request.body.userId = finalRes.id;
+              next();
+            }
+          });
+        }
+      });
     },
 
     publisherInfo: function (request, response) {
-        let input = request.body;
-        UserModel.findOne({'_id': input.userId}).populate('role').exec(function (err, finalRes) {
-            if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-            responseHandler.sendResponse(response, finalRes, HttpStatus.OK, "");
-        });
+
+      let input = request.body;
+
+      UserModel.findOne({'_id': input.userId}).populate('role photo').exec(function (err, finalRes) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          responseHandler.sendSuccess(response, finalRes);
+        }
+      });
     },
 
     publisherCronjob: function (req, res) {
@@ -329,7 +474,7 @@ let Publisher = {
               podcastsModel.awCollectionId = podcast.awCollectionId;
               podcastsModel.awGenre = podcast.awGenre;
               podcastsModel.itunesAuthor = podcast.itunesAuthor;
-              podcastsModel.itunesBlock = podcast.itunesBlock;
+              podcastsModel.iproviderListtunesBlock = podcast.itunesBlock;
               podcastsModel.itunesEmail = podcast.itunesEmail;
               podcastsModel.itunesExplicit = podcast.itunesExplicit;
               podcastsModel.itunesKeywords = podcast.itunesKeywords;

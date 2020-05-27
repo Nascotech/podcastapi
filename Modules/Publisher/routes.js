@@ -6,7 +6,8 @@
  */
 let path = require('path');
 let cron = require('node-cron');
-
+let multer = require('multer');
+let crypto = require('crypto-random-string');
 let VerifySuperAdmin = require('../../auth/VerifySuperAdmin');
 
 let PublisherController = require('./Controllers/PublisherController');
@@ -21,13 +22,23 @@ cron.schedule('0 0 */3 * * *', () => {
     PublisherController.syncPodcastList();
 });
 
-module.exports = function (router) {
-    // get Method
-    router.get('/api/changeStatus/:publisherId', VerifySuperAdmin, PublisherController.changeStatus, PublisherController.publisherInfo);
-    router.get('/api/removeUser/:publisherId', VerifySuperAdmin, PublisherController.removeUser);
+let userUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'uploads/profile')
+    },
+    filename: function (req, file, cb) {
+      cb(null, crypto({length: 64}).toString('hex') + path.extname(file.originalname))
+    }
+  })
+});
 
-    //post Method
-    router.post('/api/publisherSignup', VerifySuperAdmin, PublisherController.addPublisher, PublisherController.publisherInfo);
-    router.post('/api/publisherUpdate', VerifySuperAdmin, PublisherController.updatePublisher, PublisherController.publisherInfo);
-    router.post('/api/publisherList', VerifySuperAdmin, PublisherController.providerList);
+module.exports = function (router) {
+
+    //publisher management
+    router.post('/api/publisher', VerifySuperAdmin, userUpload.single('image'), VerifySuperAdmin, PublisherController.getPublisherRole, PublisherController.addPublisher, PublisherController.uploadPhoto, PublisherController.publisherInfo);
+    router.put('/api/publisher', VerifySuperAdmin, userUpload.single('image'), VerifySuperAdmin, PublisherController.updatePublisher, PublisherController.unlinkPhoto, PublisherController.uploadPhoto, PublisherController.publisherInfo);
+    router.get('/api/publisherStatus/:publisherId', VerifySuperAdmin, PublisherController.changeStatus, PublisherController.publisherInfo);
+    router.get('/api/removePublisher/:publisherId', VerifySuperAdmin, PublisherController.removePublisher, PublisherController.publisherInfo);
+    router.get('/api/publisher', VerifySuperAdmin, PublisherController.getPublisherRole, PublisherController.publisherList);
 };

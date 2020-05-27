@@ -46,6 +46,7 @@ module.exports = function (router) {
     /*Mobile side & Admin side*/
     router.post('/api/signup', UserController.signup, UserController.uploadDefaultPhoto, UserController.signupInfo);
     router.post('/api/login', UserController.login, UserController.finalInfo);
+    router.post('/api/adminLogin', UserController.adminLogin, UserController.addDeviceInfo, UserController.finalInfo);
     router.post('/api/logout', VerifyToken, UserController.logout);
     router.post('/api/updateProfile', VerifyToken, userUpload.single('image'), VerifyToken, UserController.editProfile, UserController.unlinkProfilePic, UserController.uploadPhoto, UserController.userFinalRes);
     router.post('/api/changePassword', VerifyToken, UserController.changePassword);

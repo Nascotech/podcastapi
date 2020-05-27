@@ -109,82 +109,116 @@ let User = {
         });
     },
 
+    adminLogin: function (request, response, next) {
+
+      let input = request.body;
+
+      UserModel.findOne({'email': input.email}).then(user => {
+        if (!user) {
+          responseHandler.sendSuccess(response, "", "Username doesn’t match");
+        } else if (user.isActive === varConst.INACTIVE) {
+          responseHandler.sendSuccess(response, "", "Your account is not active");
+        } else if (user.isDeleted === varConst.DELETED) {
+          responseHandler.sendSuccess(response, "", "Your account is deleted");
+        } else {
+          return user;
+        }
+      }).then(user => {
+          return user.deepPopulate('role');
+      }).then(user => {
+        if (user.role.slug == varConst.PUBLISHER) {
+          responseHandler.sendForbidden(response, 'Access Denied')
+        } else {
+          let passwordIsValid = bcrypt.compareSync(input.password, user.password);
+          if (!passwordIsValid) {
+            return responseHandler.sendSuccess(response, "", "Password doesn’t match");
+          } else {
+            request.body.userId = user.id;
+            next();
+          }
+        }
+      }).catch(err => {
+        responseHandler.sendInternalServerError(response, err, err.name);
+      });
+    },
+
     login: function (request, response, next) {
 
-        let input = request.body;
+      let input = request.body;
 
-        UserModel.findOne({'email': input.email}).deepPopulate('role').exec(function (err, user) {
-            if (err) {
-                responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-            } else if (!user) {
-                responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, "Username doesn’t match");
-            } else if (user.isActive === varConst.INACTIVE) {
-                responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, "Your account is not active");
-            } else if (user.isDeleted === varConst.DELETED) {
-                responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, "Your account is deleted");
-            } else {
-                let passwordIsValid = bcrypt.compareSync(input.password, user.password);
-                if (!passwordIsValid) {
-                    return responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, "Password doesn’t match");
-                } else {
-                    request.body.userId = user.id;
-                    next();
-                }
-            }
-        });
+      UserModel.findOne({'email': input.email}).deepPopulate('role').exec(function (err, user) {
+        if (err) {
+          responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
+        } else if (!user) {
+          responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, "Username doesn’t match");
+        } else if (user.isActive === varConst.INACTIVE) {
+          responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, "Your account is not active");
+        } else if (user.isDeleted === varConst.DELETED) {
+          responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, "Your account is deleted");
+        } else {
+          let passwordIsValid = bcrypt.compareSync(input.password, user.password);
+          if (!passwordIsValid) {
+            return responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, "Password doesn’t match");
+          } else {
+            request.body.userId = user.id;
+            next();
+          }
+        }
+      });
     },
 
     addDeviceInfo: function (request, response, next) {
 
-        let input = request.body;
+      let input = request.body;
 
-        DeviceInfo.findOne({'userId': input.userId}, function (err, device) {
-            if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-
-            if (device) {
-                device.devicePlatform = input.devicePlatform;
-                device.deviceToken = input.deviceToken;
-                device.deviceUniqueId = input.deviceUniqueId;
-                device.deviceModel = input.deviceModel;
-                device.deviceAccessToken = crypto({length: 64}).toString('hex');
-                device.os = input.os;
-                device.isLogin = varConst.ACTIVE;
-                device.save(function (error, deviceInfo) {
-                    if (error) responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
-                    request.body.deviceId = deviceInfo.id;
-                    request.body.userId = deviceInfo.userId;
-                    next();
-                });
+      DeviceInfo.findOne({'userId': input.userId}, function (err, device) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          if (!device) {
+            device = new DeviceInfo;
+          }
+          device.userId = input.userId;
+          device.devicePlatform = input.devicePlatform;
+          device.deviceToken = input.deviceToken;
+          device.deviceUniqueId = input.deviceUniqueId;
+          device.deviceModel = input.deviceModel;
+          device.deviceAccessToken = crypto({length: 64}).toString('hex');
+          device.os = input.os;
+          device.isLogin = varConst.ACTIVE;
+          device.save(function (err, deviceInfo) {
+            if (err) {
+              responseHandler.sendSuccess(response, err, err.name);
             } else {
-                let model = new DeviceInfo;
-                model.userId = input.userId;
-                model.devicePlatform = input.devicePlatform;
-                model.deviceToken = input.deviceToken;
-                model.deviceUniqueId = input.deviceUniqueId;
-                model.deviceModel = input.deviceModel;
-                model.deviceAccessToken = crypto({length: 64}).toString('hex');
-                model.os = input.os;
-                model.isLogin = varConst.ACTIVE;
-                model.save(function (error, deviceInfo) {
-                    if (error) responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
-
-                    request.body.deviceId = deviceInfo.id;
-                    request.body.userId = deviceInfo.userId;
-                    next();
-                });
+              request.body.deviceId = deviceInfo.id;
+              request.body.userId = deviceInfo.userId;
+              next();
             }
-        });
+          });
+        }
+      });
     },
 
     finalInfo: function (request, response) {
 
-        let input = request.body;
+      let input = request.body;
 
-        UserModel.findOne({'_id': input.userId}).deepPopulate("role photo").exec(function (err, finalInfo) {
-            if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-
-            responseHandler.sendResponse(response, finalInfo, HttpStatus.OK, "");
-        });
+      DeviceInfo.findOne({'_id': input.deviceId}, function (err, deviceInfo) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          UserModel.findOne({'_id': input.userId}).deepPopulate('role photo').exec(function (err, finalInfo) {
+            if (err) {
+              responseHandler.sendInternalServerError(response, err, err.name);
+            } else {
+              responseHandler.sendSuccess(response, {
+                  "userInfo": finalInfo,
+                  "deviceInfo": deviceInfo
+              });
+            }
+          });
+        }
+      });
     },
 
     logout: function (request, response) {

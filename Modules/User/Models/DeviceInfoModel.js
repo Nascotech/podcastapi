@@ -8,6 +8,7 @@ let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
 let constants = require('../../../Utils/ModelConstants');
 let varConst = require('../../../Utils/Constants');
+let mongooseValidationErrorTransform = require('mongoose-validation-error-transform');
 let schema = new Schema({
 
     userId: {type: String, required: true},
@@ -32,5 +33,12 @@ let schema = new Schema({
             delete obj._id;
         }
     }
+});
+mongoose.plugin(mongooseValidationErrorTransform, {
+  capitalize: true,
+  humanize: true,
+  transform: function(messages) {
+    return messages;
+  }
 });
 mongoose.model(constants.DeviceInfoModel, schema);

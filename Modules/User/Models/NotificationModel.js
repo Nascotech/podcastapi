@@ -10,7 +10,7 @@ let FCM = require('fcm-node');
 let constants = require('../../../Utils/ModelConstants');
 let varConst = require('../../../Utils/Constants');
 let deepPopulate = require('mongoose-deep-populate')(mongoose);
-
+let mongooseValidationErrorTransform = require('mongoose-validation-error-transform');
 let DeviceInfo = mongoose.model(constants.DeviceInfoModel);
 let UserModel = mongoose.model(constants.UserModel);
 
@@ -42,7 +42,13 @@ let schema = new Schema({
     }
 });
 schema.plugin(deepPopulate);
-
+mongoose.plugin(mongooseValidationErrorTransform, {
+  capitalize: true,
+  humanize: true,
+  transform: function(messages) {
+    return messages;
+  }
+});
 schema.statics.sendNotification = function (userIdArr, title, body, payload) {
 
     UserModel.find({'_id': {$in: userIdArr}}).exec(function (err, users) {
