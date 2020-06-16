@@ -343,33 +343,33 @@ let User = {
 
     changePassword: function (request, response) {
 
-        let input = request.body;
+      let input = request.body;
 
-        if (input.new_password !== input.confirm_password) {
-            responseHandler.sendResponse(response, "", HttpStatus.BAD_REQUEST, "Password & Confirm password doesn't match");
-        } else {
-            UserModel.findOne({'_id': input.userId}, function (err, user) {
-                if (err) {
-                    responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
-                } else if (!user) {
-                    responseHandler.sendResponse(response, err, HttpStatus.NOT_FOUND, "User not found");
+      if (input.newNassword !== input.confirmPassword) {
+        responseHandler.sendSuccess(response, "", "Password & Confirm password doesn't match");
+      } else {
+        UserModel.findOne({'_id': input.userId}, function (err, user) {
+          if (err) {
+            responseHandler.sendInternalServerError(response, err, err.name);
+          } else if (!user) {
+            responseHandler.sendSuccess(response, "", "User not found");
+          } else {
+            let passwordIsValid = bcrypt.compareSync(input.oldPassword, user.password);
+            if (!passwordIsValid) {
+              responseHandler.sendSuccess(response, "", "Incorrect old password");
+            } else {
+              user.password = bcrypt.hashSync(input.newPassword, 8);
+              user.save(function (error, final) {
+                if (error) {
+                  responseHandler.sendInternalServerError(response, err, err.name);
                 } else {
-                    let passwordIsValid = bcrypt.compareSync(input.old_password, user.password);
-                    if (!passwordIsValid) {
-                        responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, "Incorrect old password");
-                    } else {
-                        user.password = bcrypt.hashSync(input.new_password, 8);
-                        user.save(function (error, final) {
-                            if (error) {
-                                responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
-                            } else {
-                                responseHandler.sendResponse(response, user, HttpStatus.OK, "");
-                            }
-                        });
-                    }
+                  responseHandler.sendSuccess(response, user);
                 }
-            });
-        }
+              });
+            }
+          }
+        });
+      }
     },
 
     forgotPassword: function (request, response) {
