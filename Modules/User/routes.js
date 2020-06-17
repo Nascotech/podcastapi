@@ -49,7 +49,7 @@ module.exports = function (router) {
     router.post('/api/adminLogin', UserController.adminLogin, UserController.addDeviceInfo, UserController.finalInfo);
     router.post('/api/logout', VerifyToken, UserController.logout);
     router.post('/api/updateProfile', VerifyToken, userUpload.single('image'), VerifyToken, UserController.editProfile, UserController.unlinkProfilePic, UserController.uploadPhoto, UserController.userFinalRes);
-    router.post('/api/changePassword', VerifyToken, UserController.changePassword);
+    router.post('/api/changePassword', VerifySuperAdmin, UserController.changePassword);
     router.post('/api/forgotPassword', UserController.forgotPassword);
     router.post('/api/resetPassword', UserController.resetPassword);
 

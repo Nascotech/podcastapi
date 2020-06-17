@@ -345,7 +345,7 @@ let User = {
 
       let input = request.body;
 
-      if (input.newNassword != input.confirmPassword) {
+      if (input.newPassword != input.confirmPassword) {
         responseHandler.sendSuccess(response, "", "Password & Confirm password doesn't match");
       } else {
         UserModel.findOne({'_id': input.userId}, function (err, user) {
