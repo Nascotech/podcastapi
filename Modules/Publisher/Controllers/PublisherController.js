@@ -267,7 +267,7 @@ let Publisher = {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
         } else {
-          user.isDeleted = varConst.DELETED;
+          user.isDeleted = varConst.NOT_DELETED;
           user.save(function (error, finalRes) {
             if (err) {
               responseHandler.sendSuccess(response, err, err.name);
