@@ -220,13 +220,23 @@ let Publisher = {
           });
         },
         list: function (callback) {
-          UserModel.find(query).deepPopulate('role photo').exec(function (err, result) {
-            if (err) {
-              responseHandler.sendInternalServerError(response, err, err.name);
-            } else {
-              callback(err, result);
-            }
-          });
+          if (isPagination) {
+            UserModel.find(query).deepPopulate('role photo').limit(pageSize).skip((pageNo - 1) * pageSize).sort('-createdAt').exec(function (err, result) {
+              if (err) {
+                responseHandler.sendInternalServerError(response, err, err.name);
+              } else {
+                callback(err, result);
+              }
+            });                
+          } else {
+            UserModel.find(query).deepPopulate('role photo').sort('-createdAt').exec(function (err, result) {
+              if (err) {
+                responseHandler.sendInternalServerError(response, err, err.name);
+              } else {
+                callback(err, result);
+              }
+            });                
+          }
         },
       }, function (err, results) {
         if (err) {
