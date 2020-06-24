@@ -41,4 +41,6 @@ module.exports = function (router) {
     router.get('/api/publisherStatus/:publisherId', VerifySuperAdmin, PublisherController.changeStatus, PublisherController.publisherInfo);
     router.get('/api/removePublisher/:publisherId', VerifySuperAdmin, PublisherController.removePublisher, PublisherController.publisherInfo);
     router.get('/api/publisher', VerifySuperAdmin, PublisherController.getPublisherRole, PublisherController.publisherList);
+
+    router.post('/api/getAccessToken', PublisherController.getPublisherRole, PublisherController.getAccessToken);
 };

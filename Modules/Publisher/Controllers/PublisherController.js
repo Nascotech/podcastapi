@@ -291,6 +291,21 @@ let Publisher = {
       });
     },
 
+    getAccessToken: function (request, response) {
+
+      let input = request.body;
+
+      UserModel.findOne({'role': input.roleId, 'domain': input.domain}).populate('role photo').exec(function (err, result) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else if(result) {
+          responseHandler.sendSuccess(response, result);
+        } else {
+          responseHandler.sendSuccess(response, "", "Domain is not bind with this server");
+        }
+      });
+    },
+
     publisherInfo: function (request, response) {
 
       let input = request.body;
