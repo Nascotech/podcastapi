@@ -199,7 +199,7 @@ let Publisher = {
 
       let pageNo = (params.pageNo != null && params.pageNo != '' && params.pageNo != 0 && params.pageNo != "undefined") ? params.pageNo : 1;
       let pageSize = (params.pageSize != null && params.pageSize != '' && params.pageSize != 0 && params.pageSize != "undefined") ? parseInt(params.pageSize) : varConst.PAGE_SIZE;
-      let isPagination = (input.isPagination == true) ? true : false;
+      let isPagination = (params.isPagination == true) ? true : false;
       let searchQ = (params.keyword != null && params.keyword != '' && params.keyword != "undefined") ? {
         $or: [
             {fullName: {'$regex': params.keyword, '$options': 'i'}},
@@ -212,7 +212,7 @@ let Publisher = {
 
       async.parallel({
         count: function (callback) {input
-          UserModel.count(query).exec(function (err, result) {
+          UserModel.count(query).countDocuments(function (err, result) {
             if (err) {
               responseHandler.sendInternalServerError(response, err, err.name);
             } else {
