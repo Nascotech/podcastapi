@@ -199,6 +199,7 @@ let Publisher = {
 
       let pageNo = (params.pageNo != null && params.pageNo != '' && params.pageNo != 0 && params.pageNo != "undefined") ? params.pageNo : 1;
       let pageSize = (params.pageSize != null && params.pageSize != '' && params.pageSize != 0 && params.pageSize != "undefined") ? parseInt(params.pageSize) : varConst.PAGE_SIZE;
+      let isPagination = (input.isPagination == true) ? true : false;
       let searchQ = (params.keyword != null && params.keyword != '' && params.keyword != "undefined") ? {
         $or: [
             {fullName: {'$regex': params.keyword, '$options': 'i'}},
@@ -227,7 +228,7 @@ let Publisher = {
               } else {
                 callback(err, result);
               }
-            });                
+            });
           } else {
             UserModel.find(query).deepPopulate('role photo').sort('-createdAt').exec(function (err, result) {
               if (err) {
@@ -235,7 +236,7 @@ let Publisher = {
               } else {
                 callback(err, result);
               }
-            });                
+            });
           }
         },
       }, function (err, results) {
