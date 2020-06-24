@@ -295,7 +295,23 @@ let Publisher = {
 
       let input = request.body;
 
-      UserModel.findOne({'role': input.roleId, 'domain': input.domain}).populate('role photo').exec(function (err, result) {
+      let usersProjection = {
+        headerColor: true,
+        footerColor: true,
+        headerScript: true,
+        sidebar1: true,
+        sidebar2: true,
+        sidebar3: true,
+        sidebar4: true,
+        leaderboard1: true,
+        accessToken: true,
+        firstName: true,
+        lastName: true,
+        fullName: true,
+        photo: true
+      };
+
+      UserModel.findOne({'role': input.roleId, 'domain': input.domain}, usersProjection).populate('photo').exec(function (err, result) {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
         } else if(result) {
