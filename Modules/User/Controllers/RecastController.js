@@ -102,8 +102,13 @@ let RecastCtrl = {
       let pageNo = (input.pageNo != null && input.pageNo != '' && input.pageNo != 0 && input.pageNo != "undefined") ? input.pageNo : 1;
       let pageSize = (input.pageSize != null && input.pageSize != '' && input.pageSize != 0 && input.pageSize != "undefined") ? parseInt(input.pageSize) : varConst.PAGE_SIZE;
       let group = (input.groupId != null && input.groupId != '' && input.groupId != 0 && input.groupId != "undefined") ? {"group": input.groupId} : {};
+      let userName = (input.keyword != null && input.keyword != '' && input.keyword != "undefined") ? {
+        $or: [
+            {name: {'$regex': params.keyword, '$options': 'i'}},
+        ]
+      } : {};
 
-      let query = {$and: [{"publisher": input.userId}, group]};
+      let query = {$and: [{"publisher": input.userId}, group, userName]};
 
       async.parallel({
           count: function (callback) {
