@@ -104,7 +104,7 @@ let RecastCtrl = {
       let group = (input.groupId != null && input.groupId != '' && input.groupId != 0 && input.groupId != "undefined") ? {"group": input.groupId} : {};
       let userName = (input.keyword != null && input.keyword != '' && input.keyword != "undefined") ? {
         $or: [
-            {name: {'$regex': params.keyword, '$options': 'i'}},
+            {name: {'$regex': input.keyword, '$options': 'i'}},
         ]
       } : {};
 
