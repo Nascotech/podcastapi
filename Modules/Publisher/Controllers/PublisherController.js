@@ -296,6 +296,7 @@ let Publisher = {
       let input = request.body;
 
       let usersProjection = {
+        publisherName: true,
         headerColor: true,
         footerColor: true,
         headerScript: true,
