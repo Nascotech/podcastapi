@@ -1,9 +1,12 @@
 {
-  "env": "dev",
+  "dev": false,
   "mongodb_port": 27017,
   "port": 5000,
   "host": "localhost",
-  "db_name": "one_tap_care",
+  "db_name": "atunwa_podcast",
   "database_backup_days": 2,
-  "from_mail": "no-reply@thetatechnolabs.com"
+  "base_url": "https://admin.atunwapodcasts.com/",
+  "from_mail": "rohan@thetatechnolabs.com",
+  "mj_apikey_public": "083dd91d890044716ec875cf7355e9d1",
+  "mj_apikey_private": "b7069fe44862dcd50c676222ec341346"
 }

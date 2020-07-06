@@ -21,6 +21,8 @@ let stringConstants = require('../../../Utils/StringConstants');
 let responseHandler = require('../../../Utils/ResponseHandler');
 let dbName = require('../../../Configs/masterConfig')["db_name"];
 let host = require('../../../Configs/masterConfig')["host"];
+let BASE_URL = require('../../../Configs/masterConfig.json')["base_url"];
+let mailjet = require('node-mailjet').connect(varConst.MJ_APIKEY_PUBLIC, varConst.MJ_APIKEY_PRIVATE);
 
 //Models
 let UserModel = mongoose.model(constants.UserModel);
@@ -378,42 +380,42 @@ let User = {
 
         UserModel.findOne({'email': input.email}, function (err, user) {
             if (err) {
-                responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
+                responseHandler.sendInternalServerError(response, err, err.name);
             } else if (!user) {
-                responseHandler.sendResponse(response, "", HttpStatus.BAD_REQUEST, "User not found");
+                responseHandler.sendSuccess(response, "", "User not found");
             } else {
-                user.passwordResetToken = crypto.randomBytes(20).toString('hex');
+                user.passwordResetToken = crypto({length: 64}).toString('hex');
                 user.save(function (error, finalRes) {
                     if (error) {
-                        responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
+                        responseHandler.sendSuccess(response, error, error.name);
                     } else {
 
-                        let link = varConst.BASE_URL + "forgot-password/reset-password/" + finalRes.passwordResetToken;
+                        let link = BASE_URL + "reset-password/" + finalRes.passwordResetToken;
 
-                        /*mailjet.post("send", {'version': 'v3.1'}).request({
+                        let check = mailjet.post("send", {'version': 'v3.1'}).request({
                             "Messages": [
                                 {
                                     "From": {
-                                        "Email": varConst.MJ_MAIL_FROM,
-                                        "Name": varConst.APP_NAME
+                                      "Email": varConst.MJ_MAIL_FROM,
+                                      "Name": varConst.APP_NAME
                                     },
                                     "To": [
-                                        {
-                                            "Email": finalRes.email,
-                                            "Name": finalRes.firstName + " " + finalRes.lastName
-                                        }
+                                      {
+                                        "Email": finalRes.email,
+                                        "Name": finalRes.fullName
+                                      }
                                     ],
                                     "TemplateID": varConst.FORGOT_PASSWORD_MAIL,
                                     "TemplateLanguage": true,
                                     "Subject": "Forgot Password",
                                     "Variables": {
-                                        "USER_NAME": finalRes.firstName + " " + finalRes.lastName,
-                                        "RESET_PASSWORD_LINK": "<a href=" + link + ">" + link + "</a>"
+                                      "USER_NAME": finalRes.fullName,
+                                      "RESET_PASSWORD_LINK": link
                                     },
                                 }
                             ]
-                        });*/
-                        responseHandler.sendResponse(response, "We have sent you this email in response to your request to reset your password on " + finalRes.email, HttpStatus.OK, "");
+                        });
+                        responseHandler.sendSuccess(response, "We have sent you this email in response to your request to reset your password on " + finalRes.email);
                     }
                 });
             }
@@ -426,22 +428,37 @@ let User = {
 
         UserModel.findOne({'passwordResetToken': input.passwordResetToken}, function (err, user) {
             if (err) {
-                responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err.name);
+                responseHandler.sendInternalServerError(response, err, err.name);
             } else if (!user) {
-                responseHandler.sendResponse(response, "", HttpStatus.BAD_REQUEST, "User not found");
+                responseHandler.sendSuccess(response, "", "User not found");
             } else if (input.newPassword !== input.confirmPassword) {
-                responseHandler.sendResponse(response, "", HttpStatus.BAD_REQUEST, "Password & Confirm password doesn't match");
+                responseHandler.sendSuccess(response, "", "Password & Confirm password doesn't match");
             } else {
                 user.isResetPassword = varConst.ACTIVE;
                 user.passwordResetToken = "";
                 user.password = bcrypt.hashSync(input.newPassword, 8);
                 user.save(function (error, finalRes) {
                     if (error) {
-                        responseHandler.sendResponse(response, error, HttpStatus.BAD_REQUEST, error.name);
+                        responseHandler.sendSuccess(response, error, error.name);
                     } else {
-                        responseHandler.sendResponse(response, "Your password changed successfully", HttpStatus.OK, "");
+                        responseHandler.sendSuccess(response, "Your password changed successfully");
                     }
                 });
+            }
+        });
+    },
+
+    checkResetToken: function (request, response) {
+
+        let input = request.body;
+
+        UserModel.findOne({'passwordResetToken': input.passwordResetToken}, function (err, user) {
+            if (err) {
+              responseHandler.sendInternalServerError(response, err, err.name);
+            } else if (user) {
+              responseHandler.sendSuccess(response, {isResetToken : true});
+            } else {
+              responseHandler.sendSuccess(response, {isResetToken : false});
             }
         });
     },

@@ -46,7 +46,12 @@ exports.PLATFORM_WEB = "web";
 exports.PLATFORM_ANDROID = "android";
 exports.PLATFORM_IOS = "ios";
 
-exports.MAIL_FROM = defaultConfig["from_mail"];
+//Mailjet credentials
+exports.MJ_APIKEY_PUBLIC = defaultConfig['mj_apikey_public'];
+exports.MJ_APIKEY_PRIVATE = defaultConfig['mj_apikey_private'];
+exports.MJ_MAIL_FROM = defaultConfig["from_mail"];
+
+exports.FORGOT_PASSWORD_MAIL = 1548379;
 
 //podcast base url
 exports.PODCAST_BASE_URL = "https://atunwadigital-recast.streamguys1.com/";
