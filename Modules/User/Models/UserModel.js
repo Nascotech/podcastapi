@@ -27,6 +27,7 @@ let schema = new Schema({
     isDeleted: {type: Number, default: varConst.NOT_DELETED},  //0=no, 1=yes
 
     //sgrecast credentials
+    homeDomain: {type: String}, //yyyy-mm-dd
     registeredDate: {type: String}, //yyyy-mm-dd
     publisherName: {type: String},
     domain: {type: String},

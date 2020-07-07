@@ -50,6 +50,7 @@ let Publisher = {
           userModel.email = input.email.toLowerCase();
           userModel.publisherName = input.publisherName;
           userModel.fullName = input.fullName;
+          userModel.homeDomain = input.homeDomain;
           userModel.domain = input.domain;
           userModel.registeredDate = input.registeredDate;
           userModel.password = bcrypt.hashSync(varConst.PASSWORD, 8);
@@ -94,6 +95,7 @@ let Publisher = {
         } else {
           userModel.email = input.email.toLowerCase();
           userModel.publisherName = input.publisherName;
+          userModel.homeDomain = input.homeDomain;
           userModel.fullName = input.fullName;
           userModel.domain = input.domain;
           userModel.registeredDate = input.registeredDate;
@@ -296,6 +298,7 @@ let Publisher = {
       let input = request.body;
 
       let usersProjection = {
+        homeDomain: true,
         publisherName: true,
         headerColor: true,
         footerColor: true,
