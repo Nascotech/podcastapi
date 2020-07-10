@@ -48,6 +48,7 @@ let Publisher = {
         } else {
           let userModel = new UserModel();
           userModel.email = input.email.toLowerCase();
+          userModel.accessToken = randomString(48);
           userModel.publisherName = input.publisherName;
           userModel.fullName = input.fullName;
           userModel.homeDomain = input.homeDomain;
@@ -339,6 +340,66 @@ let Publisher = {
       });
     },
 
+    syncPublisherInfo: function (req, res) {
+      function getToken(users) {
+        return new Promise(function (resolve, reject) {
+            let count = 0;
+            users.forEach(user => {
+              let options = {
+                  url: user.sgBaseUrl + 'oauth/token',
+                  method: 'POST',
+                  headers: {
+                      Connection: 'keep-alive',
+                      Accept: '*/*',
+                      'content-type': 'multipart/form-data;'
+                  },
+                  formData: {
+                      username: user.sgUsername,
+                      client_secret: user.sgClientSecret,
+                      grant_type: user.sgGrantType,
+                      client_id: user.sgClientId,
+                      scope: user.sgScope,
+                      password: user.sgPassword
+                  }
+              };
+
+              request(options, function (err, result, body) {
+                if (err) console.log(err);
+                if (result.statusCode == 200) {
+                  let finalRes = JSON.parse(result.body);
+                  user.sgTokenType = finalRes.token_type;
+                  user.sgAccessToken = finalRes.access_token;
+                  user.sgRefreshToken = finalRes.refresh_token;
+                  user.updatedTokenDate = new Date();
+                  user.isSync = varConst.ACTIVE;
+                  user.save(function (err, result) {
+                    if (err) reject(err);
+                  });
+                } else {
+                  console.log(HttpStatus.BAD_REQUEST);
+                }
+              });
+              count++;
+              if (users.length == count) {
+                resolve(true);
+              }
+            })
+          })
+        }
+
+        syncNewPublisher().then(users => {
+          if(users.length > 0) {
+            return getToken(users);
+          } else {
+            return true;
+          }
+        }).then(token => {
+          console.log("success");
+        }).catch(err => {
+          console.log("err", err);
+        });
+    },
+
     publisherCronjob: function (req, res) {
         function TokenRefreshModel(users) {
             return new Promise(function (resolve, reject) {
@@ -582,4 +643,26 @@ let RoleUserModel = function (req, res) {
             })
         })
     })
+}
+
+let syncNewPublisher = function (req, res) {
+    return new Promise(function (resolve, reject) {
+        RolesModel.findOne({slug: varConst.PUBLISHER}, function (err, result) {
+            if (err) reject(err);
+            UserModel.find({role: result.id, 'isSync': varConst.INACTIVE}, function (err, result) {
+                if (err) reject(err);
+                resolve(result);
+            })
+        })
+    })
+}
+
+function randomString(len, charSet) {
+  charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var randomString = '';
+  for (var i = 0; i < len; i++) {
+      var randomPoz = Math.floor(Math.random() * charSet.length);
+      randomString += charSet.substring(randomPoz,randomPoz+1);
+  }
+  return randomString;
 }

@@ -50,6 +50,7 @@ let schema = new Schema({
     sgAccessToken: {type: String},
     sgRefreshToken: {type: String},
     updatedTokenDate: {type: Date},
+    isSync: {type: Number, default: varConst.INACTIVE},  //0=no, 1=yes
 }, {
     collection: constants.UserModel, autoIndex: true, timestamps: true, usePushEach: true,
     toObject: {

@@ -12,13 +12,18 @@ let VerifySuperAdmin = require('../../auth/VerifySuperAdmin');
 
 let PublisherController = require('./Controllers/PublisherController');
 
+// every 1 minute check if new publisher then add access token
+cron.schedule('* */1 * * * *', () => {
+    PublisherController.syncPublisherInfo();
+});
+
 // every 5 hour cron job will refresh-token
 cron.schedule('0 0 */5 * * *', () => {
     PublisherController.publisherCronjob();
 });
 
 // every 3 hour cron job will sync podcast list
-cron.schedule('0 */10 * * * *', () => {
+cron.schedule('0 0 */3 * * *', () => {
     PublisherController.syncPodcastList();
 });
 
