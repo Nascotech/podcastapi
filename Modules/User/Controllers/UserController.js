@@ -29,6 +29,7 @@ let UserModel = mongoose.model(constants.UserModel);
 let DeviceInfo = mongoose.model(constants.DeviceInfoModel);
 let RolesModel = mongoose.model(constants.RolesModel);
 let PhotosModel = mongoose.model(constants.PhotosModel);
+let DefaultConfigModel = mongoose.model(constants.DefaultConfigModel);
 
 let User = {
 
@@ -461,6 +462,46 @@ let User = {
               responseHandler.sendSuccess(response, {isResetToken : false});
             }
         });
+    },
+
+    defaultConfig: function (request, response) {
+
+      let input = request.body;
+
+      DefaultConfigModel.findOne({}, function (err, configModel) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+
+          if(!configModel) configModel = new DefaultConfigModel;
+
+          configModel.sidebar1 = input.sidebar1;
+          configModel.sidebar2 = input.sidebar2;
+          configModel.sidebar3 = input.sidebar3;
+          configModel.sidebar4 = input.sidebar4;
+          configModel.leaderboard1 = input.leaderboard1;
+          configModel.save(function (err, result) {
+            if (err) {
+              responseHandler.sendSuccess(response, err, err.name);
+            } else {
+              responseHandler.sendSuccess(response, result);
+            }
+          });
+        }
+      });
+    },
+
+    getDefaultConfig: function (request, response) {
+
+      let input = request.body;
+
+      DefaultConfigModel.findOne({}).exec(function (err, result) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          responseHandler.sendSuccess(response, result);
+        }
+      });
     },
 
     removeDatabase: function (request, response) {

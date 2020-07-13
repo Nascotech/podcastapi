@@ -66,12 +66,6 @@ let Publisher = {
           userModel.sgPassword = input.password;
           userModel.headerColor = input.headerColor;
           userModel.footerColor = input.footerColor;
-          userModel.headerScript = input.headerScript;
-          userModel.sidebar1 = input.sidebar1;
-          userModel.sidebar2 = input.sidebar2;
-          userModel.sidebar3 = input.sidebar3;
-          userModel.sidebar4 = input.sidebar4;
-          userModel.leaderboard1 = input.leaderboard1;
           userModel.isResetPassword = varConst.ACTIVE;
           userModel.isActive = input.isActive;
           userModel.save(function (err, finalRes) {
@@ -110,12 +104,6 @@ let Publisher = {
           userModel.sgPassword = input.password;
           userModel.headerColor = input.headerColor;
           userModel.footerColor = input.footerColor;
-          userModel.headerScript = input.headerScript;
-          userModel.sidebar1 = input.sidebar1;
-          userModel.sidebar2 = input.sidebar2;
-          userModel.sidebar3 = input.sidebar3;
-          userModel.sidebar4 = input.sidebar4;
-          userModel.leaderboard1 = input.leaderboard1;
           userModel.isActive = input.isActive;
           userModel.save(function (err, finalRes) {
             if (err) {
@@ -303,12 +291,6 @@ let Publisher = {
         publisherName: true,
         headerColor: true,
         footerColor: true,
-        headerScript: true,
-        sidebar1: true,
-        sidebar2: true,
-        sidebar3: true,
-        sidebar4: true,
-        leaderboard1: true,
         accessToken: true,
         firstName: true,
         lastName: true,

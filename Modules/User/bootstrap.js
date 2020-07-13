@@ -9,3 +9,4 @@ require('./Models/DeviceInfoModel');
 require('./Models/RolesModel');
 require('./Models/PhotosModel');
 require('./Models/NotificationModel');
+require('./Models/DefaultConfigModel');

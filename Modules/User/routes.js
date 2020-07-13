@@ -53,6 +53,8 @@ module.exports = function (router) {
     router.post('/api/forgotPassword', UserController.forgotPassword);
     router.post('/api/resetPassword', UserController.resetPassword);
     router.post('/api/checkResetToken', UserController.checkResetToken);
+    router.post('/api/defaultConfig', UserController.defaultConfig);
+    router.get('/api/defaultConfig', UserController.getDefaultConfig);
 
     //Remove database and setup fresh database with default migration
     router.get('/api/removeDatabase', VerifySuperAdmin, UserController.removeDatabase);
