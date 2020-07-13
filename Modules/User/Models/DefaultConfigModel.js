@@ -12,11 +12,11 @@ let varConst = require('../../../Utils/Constants');
 let mongooseValidationErrorTransform = require('mongoose-validation-error-transform');
 let schema = new Schema({
 
-    sidebar1: {type: String, required: true},
-    sidebar2: {type: String, required: true},
-    sidebar3: {type: String, required: true},
-    sidebar4: {type: String, required: true},
-    leaderboard1: {type: String, required: true},
+    sidebar1: {type: String},
+    sidebar2: {type: String},
+    sidebar3: {type: String},
+    sidebar4: {type: String},
+    leaderboard1: {type: String},
 }, {
     collection: constants.DefaultConfigModel, autoIndex: true, timestamps: true, usePushEach: true,
     toObject: {

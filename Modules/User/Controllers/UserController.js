@@ -474,12 +474,12 @@ let User = {
         } else {
 
           if(!configModel) configModel = new DefaultConfigModel;
+          if (input.sidebar1 != null && input.sidebar1 != '' && input.sidebar1 != "undefined") configModel.sidebar1 = input.sidebar1;
+          if (input.sidebar2 != null && input.sidebar2 != '' && input.sidebar2 != "undefined") configModel.sidebar2 = input.sidebar2;
+          if (input.sidebar3 != null && input.sidebar3 != '' && input.sidebar3 != "undefined") configModel.sidebar3 = input.sidebar3;
+          if (input.sidebar4 != null && input.sidebar4 != '' && input.sidebar4 != "undefined") configModel.sidebar4 = input.sidebar4;
+          if (input.leaderboard1 != null && input.leaderboard1 != '' && input.leaderboard1 != "undefined") configModel.leaderboard1 = input.leaderboard1;
 
-          configModel.sidebar1 = input.sidebar1;
-          configModel.sidebar2 = input.sidebar2;
-          configModel.sidebar3 = input.sidebar3;
-          configModel.sidebar4 = input.sidebar4;
-          configModel.leaderboard1 = input.leaderboard1;
           configModel.save(function (err, result) {
             if (err) {
               responseHandler.sendSuccess(response, err, err.name);
