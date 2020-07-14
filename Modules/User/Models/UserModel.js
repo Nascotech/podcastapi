@@ -41,6 +41,8 @@ let schema = new Schema({
     sgTokenType: {type: String},
     headerColor: {type: String},
     footerColor: {type: String},
+    termsOfUse: {type: String},
+    privacyPolicy: {type: String},
     headerScript: {type: String},
     sgAccessToken: {type: String},
     sgRefreshToken: {type: String},

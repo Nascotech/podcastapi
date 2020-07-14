@@ -53,6 +53,8 @@ let Publisher = {
           userModel.fullName = input.fullName;
           userModel.homeDomain = input.homeDomain;
           userModel.domain = input.domain;
+          userModel.termsOfUse = input.termsOfUse;
+          userModel.privacyPolicy = input.privacyPolicy;
           userModel.registeredDate = input.registeredDate;
           userModel.password = bcrypt.hashSync(varConst.PASSWORD, 8);
           userModel.role = input.roleId;
@@ -93,6 +95,8 @@ let Publisher = {
           userModel.homeDomain = input.homeDomain;
           userModel.fullName = input.fullName;
           userModel.domain = input.domain;
+          userModel.termsOfUse = input.termsOfUse;
+          userModel.privacyPolicy = input.privacyPolicy;
           userModel.registeredDate = input.registeredDate;
           userModel.sgUsername = input.sgUsername.toLowerCase();
           userModel.sgBaseUrl = input.sgBaseUrl;
@@ -295,7 +299,9 @@ let Publisher = {
         firstName: true,
         lastName: true,
         fullName: true,
-        photo: true
+        photo: true,
+        termsOfUse: true,
+        privacyPolicy: true
       };
 
       UserModel.findOne({'role': input.roleId, 'domain': input.domain}, usersProjection).populate('photo').exec(function (err, result) {
