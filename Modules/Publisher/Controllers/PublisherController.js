@@ -126,25 +126,58 @@ let Publisher = {
 
       let input = request.body;
 
-      if (request.file) {
-        PhotosModel.findOne({'_id': mongoose.Types.ObjectId(input.oldPhotoId)}, function (err, photoModel) {
-          if (err){
-            responseHandler.sendInternalServerError(response, err, err.name);
-          } else if (!photoModel) {
-            next();
-          } else {
-            fs.exists(photoModel.path, function (exists) {
-              if (exists) {
-                fs.unlink(photoModel.path, function (err) {
+      if (request.files.image) {
+        UserModel.findOne({'_id': mongoose.Types.ObjectId(input.userId)}, function (err, userInfo) {
+          PhotosModel.findOne({'_id': mongoose.Types.ObjectId(userInfo.photo)}, function (err, photoModel) {
+            if (err){
+              responseHandler.sendInternalServerError(response, err, err.name);
+            } else if (!photoModel) {
+              next();
+            } else {
+              fs.exists(photoModel.path, function (exists) {
+                if (exists) {
+                  fs.unlink(photoModel.path, function (err) {
+                    photoModel.remove();
+                    next();
+                  });
+                } else {
                   photoModel.remove();
                   next();
-                });
-              } else {
-                photoModel.remove();
-                next();
-              }
-            });
-          }
+                }
+              });
+            }
+          });
+        });
+      } else {
+        next();
+      }
+    },
+
+    unlinkFavIcon: function (request, response, next) {
+
+      let input = request.body;
+
+      if (request.files.favIcon) {
+        UserModel.findOne({'_id': mongoose.Types.ObjectId(input.userId)}, function (err, userInfo) {
+          PhotosModel.findOne({'_id': mongoose.Types.ObjectId(userInfo.favIcon)}, function (err, photoModel) {
+            if (err){
+              responseHandler.sendInternalServerError(response, err, err.name);
+            } else if (!photoModel) {
+              next();
+            } else {
+              fs.exists(photoModel.path, function (exists) {
+                if (exists) {
+                  fs.unlink(photoModel.path, function (err) {
+                    photoModel.remove();
+                    next();
+                  });
+                } else {
+                  photoModel.remove();
+                  next();
+                }
+              });
+            }
+          });
         });
       } else {
         next();
@@ -155,32 +188,80 @@ let Publisher = {
 
       let input = request.body;
 
-      if (request.file) {
-        let photosModel = new PhotosModel;
-        photosModel.originalName = request.file.originalname;
-        photosModel.fileName = request.file.filename;
-        photosModel.destination = request.file.destination;
-        photosModel.path = request.file.path;
-        photosModel.size = request.file.size;
-        photosModel.save((err, photo) => {
-          if (err) {
-            responseHandler.sendSuccess(response, err, err.name);
-          } else {
-            UserModel.findOne({_id: mongoose.Types.ObjectId(input.userId)}, function (err, userModel) {
-              if (err) {
-                responseHandler.sendInternalServerError(response, err, err.name);
-              } else {
-                userModel.photo = mongoose.Types.ObjectId(photo.id);
-                userModel.save((err, result) => {
-                  if (err) {
-                    responseHandler.sendInternalServerError(response, err, err.name);
-                  } else {
-                    next();
-                  }
-                });
-              }
-            });
-          }
+      if (request.files.image) {
+        let count = 0;
+        request.files.image.forEach(function (info) {
+          let photosModel = new PhotosModel;
+          photosModel.originalName = info.originalname;
+          photosModel.fileName = info.filename;
+          photosModel.destination = info.destination;
+          photosModel.path = info.path;
+          photosModel.size = info.size;
+          photosModel.save((err, photo) => {
+            if (err) {
+              responseHandler.sendInternalServerError(response, err, err.name);
+            } else {
+              UserModel.findOne({_id: mongoose.Types.ObjectId(input.userId)}, function (err, userModel) {
+                if (err) {
+                  responseHandler.sendInternalServerError(response, err, err.name);
+                } else {
+                  userModel.photo = mongoose.Types.ObjectId(photo.id);
+                  userModel.save((err, result) => {
+                    if (err) {
+                      responseHandler.sendInternalServerError(response, err, err.name);
+                    } else {
+                      count++;
+                      if (request.files.image.length == count) {
+                        next();
+                      }
+                    }
+                  });
+                }
+              });
+            }
+          });
+        });
+      } else {
+        next();
+      }
+    },
+
+    uploadFavIcon: function (request, response, next) {
+
+      let input = request.body;
+
+      if (request.files.favIcon) {
+        let count = 0;
+        request.files.favIcon.forEach(function (info) {
+          let photosModel = new PhotosModel;
+          photosModel.originalName = info.originalname;
+          photosModel.fileName = info.filename;
+          photosModel.destination = info.destination;
+          photosModel.path = info.path;
+          photosModel.size = info.size;
+          photosModel.save((err, photo) => {
+            if (err) {
+              responseHandler.sendInternalServerError(response, err, err.name);
+            } else {
+              UserModel.findOne({_id: mongoose.Types.ObjectId(input.userId)}, function (err, userModel) {
+                if (err) {
+                  responseHandler.sendInternalServerError(response, err, err.name);
+                } else {
+                  userModel.favIcon = mongoose.Types.ObjectId(photo.id);
+                  userModel.save((err, result) => {
+                    if (err) {
+                      responseHandler.sendInternalServerError(response, err, err.name);
+                    } else {
+                      count++;
+                      if (request.files.favIcon.length == count) {
+                        next();
+                      }
+                    }
+                  });
+                }
+              });
+            }
+          });
         });
       } else {
         next();
@@ -217,7 +298,7 @@ let Publisher = {
         },
         list: function (callback) {
           if (isPagination) {
-            UserModel.find(query).deepPopulate('role photo').limit(pageSize).skip((pageNo - 1) * pageSize).sort('-createdAt').exec(function (err, result) {
+            UserModel.find(query).deepPopulate('role photo favIcon').limit(pageSize).skip((pageNo - 1) * pageSize).sort('-createdAt').exec(function (err, result) {
               if (err) {
                 responseHandler.sendInternalServerError(response, err, err.name);
               } else {
@@ -225,7 +306,7 @@ let Publisher = {
               }
             });
           } else {
-            UserModel.find(query).deepPopulate('role photo').sort('-createdAt').exec(function (err, result) {
+            UserModel.find(query).deepPopulate('role photo favIcon').sort('-createdAt').exec(function (err, result) {
               if (err) {
                 responseHandler.sendInternalServerError(response, err, err.name);
               } else {
@@ -301,10 +382,11 @@ let Publisher = {
         fullName: true,
         photo: true,
         termsOfUse: true,
+        favIcon: true,
         privacyPolicy: true
       };
 
-      UserModel.findOne({'role': input.roleId, 'domain': input.domain}, usersProjection).populate('photo').exec(function (err, result) {
+      UserModel.findOne({'role': input.roleId, 'domain': input.domain}, usersProjection).populate('photo favIcon').exec(function (err, result) {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
         } else if(result) {
@@ -319,7 +401,7 @@ let Publisher = {
 
       let input = request.body;
 
-      UserModel.findOne({'_id': input.userId}).populate('role photo').exec(function (err, finalRes) {
+      UserModel.findOne({'_id': input.userId}).populate('role photo favIcon').exec(function (err, finalRes) {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
         } else {

@@ -18,6 +18,7 @@ let schema = new Schema({
     email: {type: String, index: true, format: 'email'},
     role: {type: String, required: true, ref: constants.RolesModel},
     photo: {type: String, ref: constants.PhotosModel},
+    favIcon: {type: String, ref: constants.PhotosModel},
     accessToken: {type: String},
     password: {type: String},
     passwordResetToken: {type: String},

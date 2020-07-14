@@ -41,8 +41,8 @@ let userUpload = multer({
 module.exports = function (router) {
 
     //publisher management
-    router.post('/api/publisher', VerifySuperAdmin, userUpload.single('image'), VerifySuperAdmin, PublisherController.getPublisherRole, PublisherController.addPublisher, PublisherController.uploadPhoto, PublisherController.publisherInfo);
-    router.put('/api/publisher', VerifySuperAdmin, userUpload.single('image'), VerifySuperAdmin, PublisherController.updatePublisher, PublisherController.unlinkPhoto, PublisherController.uploadPhoto, PublisherController.publisherInfo);
+    router.post('/api/publisher', VerifySuperAdmin, userUpload.fields([{name: 'image', maxCount: '1'}, {name: 'favIcon', maxCount: '1'}]), VerifySuperAdmin, PublisherController.getPublisherRole, PublisherController.addPublisher, PublisherController.uploadPhoto, PublisherController.uploadFavIcon, PublisherController.publisherInfo);
+    router.put('/api/publisher', userUpload.fields([{name: 'image', maxCount: '1'}, {name: 'favIcon', maxCount: '1'}]), PublisherController.updatePublisher, PublisherController.unlinkPhoto, PublisherController.unlinkFavIcon, PublisherController.uploadPhoto, PublisherController.uploadFavIcon, PublisherController.publisherInfo);
     router.get('/api/publisherStatus/:publisherId', VerifySuperAdmin, PublisherController.changeStatus, PublisherController.publisherInfo);
     router.get('/api/removePublisher/:publisherId', VerifySuperAdmin, PublisherController.removePublisher, PublisherController.publisherInfo);
     router.get('/api/publisher', VerifySuperAdmin, PublisherController.getPublisherRole, PublisherController.publisherList);
