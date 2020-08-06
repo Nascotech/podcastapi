@@ -479,6 +479,11 @@ let User = {
           configModel.sidebar3 = (input.sidebar3 != null && input.sidebar3 != '' && input.sidebar3 != "undefined") ? input.sidebar3 : '';
           configModel.sidebar4 = (input.sidebar4 != null && input.sidebar4 != '' && input.sidebar4 != "undefined") ? input.sidebar4 : '';
           configModel.leaderboard1 = (input.leaderboard1 != null && input.leaderboard1 != '' && input.leaderboard1 != "undefined") ? input.leaderboard1 : '';
+          configModel.sidebar11 = (input.sidebar11 != null && input.sidebar11 != '' && input.sidebar11 != "undefined") ? input.sidebar11 : '';
+          configModel.sidebar22 = (input.sidebar22 != null && input.sidebar22 != '' && input.sidebar22 != "undefined") ? input.sidebar22 : '';
+          configModel.sidebar33 = (input.sidebar33 != null && input.sidebar33 != '' && input.sidebar33 != "undefined") ? input.sidebar33 : '';
+          configModel.sidebar44 = (input.sidebar44 != null && input.sidebar44 != '' && input.sidebar44 != "undefined") ? input.sidebar44 : '';
+          configModel.leaderboard11 = (input.leaderboard11 != null && input.leaderboard11 != '' && input.leaderboard11 != "undefined") ? input.leaderboard11 : '';
           configModel.save(function (err, result) {
             if (err) {
               responseHandler.sendSuccess(response, err, err.name);

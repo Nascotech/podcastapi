@@ -13,10 +13,15 @@ let mongooseValidationErrorTransform = require('mongoose-validation-error-transf
 let schema = new Schema({
 
     sidebar1: {type: String},
+    sidebar11: {type: String},
     sidebar2: {type: String},
+    sidebar22: {type: String},
     sidebar3: {type: String},
+    sidebar33: {type: String},    
     sidebar4: {type: String},
+    sidebar44: {type: String},
     leaderboard1: {type: String},
+    leaderboard11: {type: String},    
 }, {
     collection: constants.DefaultConfigModel, autoIndex: true, timestamps: true, usePushEach: true,
     toObject: {
