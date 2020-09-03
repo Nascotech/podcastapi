@@ -43,6 +43,7 @@ let schema = new Schema({
     headerColor: {type: String},
     footerColor: {type: String},
     termsOfUse: {type: String},
+    googleCode: {type: String},
     privacyPolicy: {type: String},
     headerScript: {type: String},
     sgAccessToken: {type: String},
