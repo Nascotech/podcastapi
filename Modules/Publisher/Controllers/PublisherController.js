@@ -385,7 +385,8 @@ let Publisher = {
         photo: true,
         termsOfUse: true,
         favIcon: true,
-        privacyPolicy: true
+        privacyPolicy: true,
+        googleCode: true
       };
 
       UserModel.findOne({'role': input.roleId, 'domain': input.domain}, usersProjection).populate('photo favIcon').exec(function (err, result) {
