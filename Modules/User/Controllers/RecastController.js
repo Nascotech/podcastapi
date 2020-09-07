@@ -174,14 +174,16 @@ let RecastCtrl = {
 
         let params = request.params;
         let input = request.body;
+        let queryP = request.query;
+        let pageNo = (queryP.pageNo != null && queryP.pageNo != '' && queryP.pageNo != 0 && queryP.pageNo != "undefined") ? queryP.pageNo : 1;
 
         let options = {
-            url: input.sgBaseUrl + 'api/v1/sgrecast/podcasts/feeds/episodes/' + params.podcastId,
-            headers: {
-                Connection: 'keep-alive',
-                Accept: '*/*',
-                Authorization: input.sgTokenType + ' ' + input.sgAccessToken
-            }
+          url: input.sgBaseUrl + 'api/v1/sgrecast/podcasts/feeds/episodes/' + params.podcastId + '?length=10&page=' + pageNo,
+          headers: {
+            Connection: 'keep-alive',
+            Accept: '*/*',
+            Authorization: input.sgTokenType + ' ' + input.sgAccessToken
+          }
         };
 
         requestAPI(options, function (err, result, body) {
