@@ -198,6 +198,24 @@ let RecastCtrl = {
         });
     },
 
+    checkPublisher: function (request, response, next) {
+
+      let params = request.params;
+
+      UserModel.findOne({'_id': params.publisherId}).exec(function (err, user) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          request.body.userId = user.id;
+          request.body.sgTokenType = user.sgTokenType;
+          request.body.sgAccessToken = user.sgAccessToken;
+          request.body.sgRefreshToken = user.sgRefreshToken;
+          request.body.sgBaseUrl = user.sgBaseUrl;
+          next();
+        }
+      });
+    },
+
     getGroups: function(request, response) {
 
       let input = request.body;
