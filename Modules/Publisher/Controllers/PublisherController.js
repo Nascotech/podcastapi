@@ -124,6 +124,27 @@ let Publisher = {
       });
     },
 
+    updateGroup: function (request, response, next) {
+
+      let input = request.body;
+
+      UserModel.findOne({'_id': input.publisherId}, function (err, userModel) {
+        if (err) {
+          responseHandler.sendInternalServerError(response, err, err.name);
+        } else {
+          userModel.groupId = input.groupId;
+          userModel.save(function (err, finalRes) {
+            if (err) {
+              responseHandler.sendSuccess(response, err, err.name);
+            } else {
+              request.body.userId = finalRes.id;
+              next();
+            }
+          });
+        }
+      });
+    },
+
     unlinkPhoto: function (request, response, next) {
 
       let input = request.body;
