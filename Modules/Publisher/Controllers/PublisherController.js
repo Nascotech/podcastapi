@@ -405,6 +405,7 @@ let Publisher = {
         fullName: true,
         photo: true,
         termsOfUse: true,
+        groupId: true,
         favIcon: true,
         privacyPolicy: true,
         googleCode: true
