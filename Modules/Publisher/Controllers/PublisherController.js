@@ -132,6 +132,7 @@ let Publisher = {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
         } else {
+          userModel.groupName = input.groupName;
           userModel.groupId = input.groupId;
           userModel.save(function (err, finalRes) {
             if (err) {

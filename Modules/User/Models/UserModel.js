@@ -26,6 +26,7 @@ let schema = new Schema({
     isActive: {type: Number, default: varConst.ACTIVE},  //0=no, 1=yes
     isResetPassword: {type: Number, default: varConst.INACTIVE},  //0=no, 1=yes
     isDeleted: {type: Number, default: varConst.NOT_DELETED},  //0=no, 1=yes
+    groupName: {type: String},
     groupId: {type: Number},
 
     //sgrecast credentials
