@@ -18,9 +18,9 @@ cron.schedule('* */1 * * * *', () => {
 });
 
 // every 5 hour cron job will refresh-token
-cron.schedule('0 0 */5 * * *', () => {
-    PublisherController.publisherCronjob();
-});
+// cron.schedule('0 0 */5 * * *', () => {
+//     PublisherController.publisherCronjob();
+// });
 
 // every 3 hour cron job will sync podcast list
 cron.schedule('0 0 */3 * * *', () => {

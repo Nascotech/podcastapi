@@ -28,6 +28,9 @@ function VerifyRecastToken(req, res, next) {
                 } else {
                     req.body.userId = user.id;
                     req.body.sgTokenType = user.sgTokenType;
+                    req.body.sgScope = user.sgScope;
+                    req.body.sgClientId = user.sgClientId;
+                    req.body.sgClientSecret = user.sgClientSecret;
                     req.body.sgAccessToken = user.sgAccessToken;
                     req.body.sgRefreshToken = user.sgRefreshToken;
                     req.body.sgBaseUrl = user.sgBaseUrl;

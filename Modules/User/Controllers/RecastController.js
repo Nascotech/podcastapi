@@ -233,16 +233,104 @@ let RecastCtrl = {
       };
 
       requestAPI(options, function (err, result, body) {
-          if (err) responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err);
+          if (err) responseHandler.sendInternalServerError(response, err, err);
 
           if (result.statusCode == 200) {
               let finalRes = JSON.parse(result.body);
               responseHandler.sendResponse(response, finalRes, HttpStatus.OK, "");
           } else {
-              responseHandler.sendResponse(response, err, HttpStatus.BAD_REQUEST, err);
+            responseHandler.sendInternalServerError(response, err, err);
           }
       });
+    },
+
+    checkToken: function(request, response, next) {
+
+      let input = request.body;
+
+      let options = {
+        method: 'GET',
+        url: input.sgBaseUrl + 'api/v1/groups?page=' + 1,
+        headers: {
+          Connection: 'keep-alive',
+          Accept: '*/*',
+          Authorization: input.sgTokenType + ' ' + input.sgAccessToken
+        }
+      };
+
+      requestAPI(options, function (err, result, body) {
+        if (result.statusCode == 200 && IsJsonString(result.body)) {
+          request.body.isValidToken = true;
+          next();
+        } else {
+          request.body.isValidToken = false;
+          next();
+        }
+      });
+    },
+
+    updateToken: function(request, response, next) {
+
+      let input = request.body;
+
+      if(input.isValidToken == true) {
+        next();
+      } else {
+        let options = {
+          url: input.sgBaseUrl + 'oauth/token',
+          method: 'POST',
+          headers: {
+            Connection: 'keep-alive',
+            Accept: '*/*',
+            'content-type': 'multipart/form-data;'
+          },
+          formData: {
+            client_secret: input.sgClientSecret,
+            refresh_token: input.sgRefreshToken,
+            scope: input.sgScope,
+            client_id: input.sgClientId,
+            grant_type: "refresh_token"
+          }
+        };
+
+        requestAPI(options, function (err, result, body) {
+            if (err) {
+              responseHandler.sendInternalServerError(response, err, err);
+            } else if (result.statusCode == 200 && IsJsonString(result.body)) {
+              let finalRes = JSON.parse(result.body);
+              UserModel.findOne({'_id': input.userId}, function (err, userModel) {
+                if (err) {
+                  responseHandler.sendInternalServerError(response, err, err);
+                } else {
+                  userModel.sgAccessToken = finalRes.access_token;
+                  userModel.sgRefreshToken = finalRes.refresh_token;
+                  userModel.updatedTokenDate = new Date();
+                  userModel.save(function (err, result) {
+                    if (err) {
+                      responseHandler.sendSuccess(response, err, err.name);
+                    } else {
+                      request.body.sgAccessToken = result.sgAccessToken;
+                      request.body.sgRefreshToken = result.sgRefreshToken;
+                      next();
+                    }
+                  });
+                }
+              });
+            } else {
+              responseHandler.sendInternalServerError(response, err, err);
+            }
+        });
+      }
     }
 };
 
 module.exports = RecastCtrl;
+
+function IsJsonString(str) {
+  try {
+      JSON.parse(str);
+  } catch (e) {
+      return false;
+  }
+  return true;
+}
