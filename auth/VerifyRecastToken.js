@@ -27,6 +27,7 @@ function VerifyRecastToken(req, res, next) {
                     reject(responseHandler.sendResponse(res, "", HttpStatus.UNAUTHORIZED, "Your account is inactive"));
                 } else {
                     req.body.userId = user.id;
+                    req.body.currentPublisherId = user.id;
                     req.body.sgTokenType = user.sgTokenType;
                     req.body.sgScope = user.sgScope;
                     req.body.sgClientId = user.sgClientId;

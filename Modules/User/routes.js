@@ -69,5 +69,5 @@ module.exports = function (router) {
     router.get('/api/getPodcastDetails/:podcastId', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getPodcastDetails);
     router.get('/api/getPodcastEpisodes/:podcastId', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getPodcastEpisodes);
     router.post('/api/getGroups', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getGroups);
-    router.get('/api/userGroups/:publisherId', VerifySuperAdmin, RecastController.checkToken, RecastController.updateToken, RecastController.checkPublisher, RecastController.getGroups);
+    router.get('/api/userGroups/:publisherId', VerifySuperAdmin, RecastController.checkPublisher, RecastController.checkToken, RecastController.updateToken, RecastController.getGroups);
 };

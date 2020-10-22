@@ -206,7 +206,10 @@ let RecastCtrl = {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
         } else {
-          request.body.userId = user.id;
+          request.body.currentPublisherId = user.id;
+          request.body.sgScope = user.sgScope;
+          request.body.sgClientId = user.sgClientId;
+          request.body.sgClientSecret = user.sgClientSecret;
           request.body.sgTokenType = user.sgTokenType;
           request.body.sgAccessToken = user.sgAccessToken;
           request.body.sgRefreshToken = user.sgRefreshToken;
@@ -298,7 +301,7 @@ let RecastCtrl = {
               responseHandler.sendInternalServerError(response, err, err);
             } else if (result.statusCode == 200 && IsJsonString(result.body)) {
               let finalRes = JSON.parse(result.body);
-              UserModel.findOne({'_id': input.userId}, function (err, userModel) {
+              UserModel.findOne({'_id': input.currentPublisherId}, function (err, userModel) {
                 if (err) {
                   responseHandler.sendInternalServerError(response, err, err);
                 } else {
