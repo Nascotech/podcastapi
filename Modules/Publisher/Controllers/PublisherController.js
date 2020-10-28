@@ -43,9 +43,11 @@ let Publisher = {
       UserModel.findOne({'email': input.email.toLowerCase()}, function (err, publisher) {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
-        } else if (publisher) {
-          responseHandler.sendSuccess(response, "", stringConstants.UserAlreadyExist);
-        } else {
+        }
+        //  else if (publisher) {
+        //   responseHandler.sendSuccess(response, "", stringConstants.UserAlreadyExist);
+        // } 
+        else {
           let userModel = new UserModel();
           userModel.email = input.email.toLowerCase();
           userModel.accessToken = randomString(48);
