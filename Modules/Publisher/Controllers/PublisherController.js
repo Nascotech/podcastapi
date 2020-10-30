@@ -46,7 +46,7 @@ let Publisher = {
         }
         //  else if (publisher) {
         //   responseHandler.sendSuccess(response, "", stringConstants.UserAlreadyExist);
-        // } 
+        // }
         else {
           let userModel = new UserModel();
           userModel.email = input.email.toLowerCase();
@@ -380,7 +380,7 @@ let Publisher = {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
         } else {
-          user.isDeleted = varConst.NOT_DELETED;
+          user.isDeleted = varConst.DELETED;
           user.save(function (error, finalRes) {
             if (err) {
               responseHandler.sendSuccess(response, err, err.name);
