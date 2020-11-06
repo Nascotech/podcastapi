@@ -28,6 +28,7 @@ let schema = new Schema({
     isDeleted: {type: Number, default: varConst.NOT_DELETED},  //0=no, 1=yes
     groupName: {type: String},
     groupId: {type: Number},
+    podcastsGroups: [{type: Number}],
 
     //sgrecast credentials
     homeDomain: {type: String}, //yyyy-mm-dd

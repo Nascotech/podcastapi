@@ -11,20 +11,26 @@ let crypto = require('crypto-random-string');
 let VerifySuperAdmin = require('../../auth/VerifySuperAdmin');
 
 let PublisherController = require('./Controllers/PublisherController');
+let CronjobController = require('./Controllers/CronjobController');
 
 // every 1 minute check if new publisher then add access token
-cron.schedule('* */1 * * * *', () => {
-    PublisherController.syncPublisherInfo();
-});
+// cron.schedule('* */1 * * * *', () => {
+//     PublisherController.syncPublisherInfo();
+// });
 
-// every 5 hour cron job will refresh-token
-// cron.schedule('0 0 */5 * * *', () => {
+// every 2 hour cron job will refresh-token
+// cron.schedule('0 0 */2 * * *', () => {
 //     PublisherController.publisherCronjob();
 // });
 
-// every 3 hour cron job will sync podcast list
+// every 5 hour cron job will sync groups
+cron.schedule('0 0 */5 * * *', () => {
+    PublisherController.syncGroupList();
+});
+
+//every 3 hour cron job will sync podcast list
 cron.schedule('0 0 */3 * * *', () => {
-    PublisherController.syncPodcastList();
+  CronjobController.syncPodcastList();
 });
 
 let userUpload = multer({
@@ -49,4 +55,5 @@ module.exports = function (router) {
     router.put('/api/publisher/group', VerifySuperAdmin, PublisherController.updateGroup, PublisherController.publisherInfo);
 
     router.post('/api/getAccessToken', PublisherController.getPublisherRole, PublisherController.getAccessToken);
+    router.get('/api/test', CronjobController.syncGroupList);
 };

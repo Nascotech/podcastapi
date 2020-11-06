@@ -13,6 +13,7 @@ let mongooseValidationErrorTransform = require('mongoose-validation-error-transf
 let schema = new Schema({
 
     publisher: {type: String, required: true, ref: constants.UserModel},
+    collectionId: {type: Number},
     podcastId: {type: Number},
     guid: {type: String},
     name: {type: String},
@@ -26,24 +27,6 @@ let schema = new Schema({
     rssFeed: {type: String},
     categories: [{type: String}],
     syndications: [{googlePlay: String, iTunes: String, tuneIn: String}],
-    awEpisodeId: {type: Number},
-    awCollectionId: {type: String},
-    awGenre: {type: String},
-    itunesAuthor: {type: String},
-    itunesBlock: {type: String},
-    itunesEmail: {type: String},
-    itunesExplicit: {type: String},
-    itunesKeywords: {type: String},
-    itunesLink: {type: String},
-    itunesName: {type: String},
-    itunesNewFeed: {type: String},
-    itunesSubtitle: {type: String},
-    itunesSummary: {type: String},
-    itunesType: {type: String},
-    copyright: {type: String},
-    goooglePlayLink: {type: String},
-    subOverrideLink: {type: String},
-    ttl: {type: String},
     group: {type: Number},
     user: {type: Number},
     createdBy: {type: String},
@@ -55,9 +38,6 @@ let schema = new Schema({
     primaryColor: {type: String},
     lighterColor: {type: String},
     fontSelect: {type: String},
-    disableScrub: {type: String},
-    disableDownload: {type: String},
-    playerAutoCreation: {type: Number}
 }, {
     collection: constants.PodcastsModel, autoIndex: true, usePushEach: true,
     toObject: {

@@ -8,3 +8,5 @@
 access.log
 package-lock.json
 /uploads
+.tags
+.tags1

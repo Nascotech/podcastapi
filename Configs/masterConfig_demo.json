@@ -8,5 +8,9 @@
   "base_url": "https://admin.atunwapodcasts.com/",
   "from_mail": "rohan@thetatechnolabs.com",
   "mj_apikey_public": "083dd91d890044716ec875cf7355e9d1",
-  "mj_apikey_private": "b7069fe44862dcd50c676222ec341346"
+  "mj_apikey_private": "b7069fe44862dcd50c676222ec341346",
+  "LINODE_END_POINT": "ams.eu-central-1.linodeobjects.com",
+  "SECRET_KEY_ID": "KJRHGR6WHA8ULO5AP81J",
+  "SECRET_ACCESS_KEY": "HjHGP32fTqe6t7uJfWhkVxkA8o3mptfFBykyp0N8",
+  "BUCKET_NAME": "ams"
 }

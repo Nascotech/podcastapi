@@ -11,3 +11,5 @@ exports.RolesModel = "roles";
 exports.NotificationModel = "notifications";
 exports.PodcastsModel = "podcasts";
 exports.DefaultConfigModel = "default_config";
+exports.EpisodesModel = "episodes";
+exports.GroupsModel = "groups";

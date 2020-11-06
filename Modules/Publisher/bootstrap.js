@@ -5,3 +5,5 @@
  * Time: 5:16 PM
  */
  require('./Models/PodcastsModel');
+ require('./Models/EpisodesModel');
+ require('./Models/GroupsModel');
