@@ -99,7 +99,7 @@ let PodcastCtrl = {
         });
       },
       list: function (callback) {
-        EpisodesModel.find(query).limit(varConst.PAGE_SIZE_25).skip((pageNo - 1) * varConst.PAGE_SIZE_25).sort('-createdAt').exec(function (err, result) {
+        EpisodesModel.find(query).limit(varConst.PAGE_SIZE_25).skip((pageNo - 1) * varConst.PAGE_SIZE_25).sort('-pubDate').exec(function (err, result) {
           if (err) responseHandler.sendInternalServerError(response, err, err.name);
 
           callback(err, result);
