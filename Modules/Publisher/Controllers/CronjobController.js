@@ -252,6 +252,8 @@ let PublisherCronjob = {
         EpisodesModel.findOne({"guid": episodeInfo.guid, podcast: podcast.id}).then(episodeModel => {
           if(!episodeModel) episodeModel = new EpisodesModel();
           episodeModel.podcast = podcast.id;
+          episodeModel.publisher = publisherId;
+          episodeModel.sgPodcastId = podcast.podcastId;
           episodeModel.title = episodeInfo.title;
           episodeModel.description = episodeInfo.description;
           episodeModel.guid = episodeInfo.guid;
@@ -433,11 +435,11 @@ let PublisherCronjob = {
         return true;
       }
     }).then(result => {
-      responseHandler.sendSuccess(response, result);
-      //console.log("Groups sync successfully");
+      //responseHandler.sendSuccess(response, result);
+      console.log("Groups sync successfully");
     }).catch(err => {
-      responseHandler.sendInternalServerError(response, err, err.name);
-      //console.log(err)
+      //responseHandler.sendInternalServerError(response, err, err.name);
+      console.log(err)
     });
   }
 };

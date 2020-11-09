@@ -9,9 +9,11 @@ let cron = require('node-cron');
 let multer = require('multer');
 let crypto = require('crypto-random-string');
 let VerifySuperAdmin = require('../../auth/VerifySuperAdmin');
+let VerifyRecastToken = require('../../auth/VerifyRecastToken');
 
 let PublisherController = require('./Controllers/PublisherController');
 let CronjobController = require('./Controllers/CronjobController');
+let PodcastController = require('./Controllers/PodcastController');
 
 // every 1 minute check if new publisher then add access token
 // cron.schedule('* */1 * * * *', () => {
@@ -55,5 +57,14 @@ module.exports = function (router) {
     router.put('/api/publisher/group', VerifySuperAdmin, PublisherController.updateGroup, PublisherController.publisherInfo);
 
     router.post('/api/getAccessToken', PublisherController.getPublisherRole, PublisherController.getAccessToken);
-    router.get('/api/test', CronjobController.syncGroupList);
+
+    //podcasts APIs
+    router.post('/api/getPodcasts', VerifyRecastToken, PodcastController.getPodcasts);
+    router.get('/api/getPodcastDetails/:podcastId', VerifyRecastToken, PodcastController.getPodcastDetails);
+    router.get('/api/getPodcastEpisodes/:podcastId', VerifyRecastToken, PodcastController.getPodcastEpisodes);
+    router.get('/api/getGroups', VerifyRecastToken, PodcastController.getGroups);
+    router.get('/api/userGroups/:publisherId', VerifySuperAdmin, PodcastController.userGroups);
+
+    router.get('/api/test', CronjobController.syncPodcastList);
+    router.get('/api/test2', CronjobController.syncGroupList);
 };

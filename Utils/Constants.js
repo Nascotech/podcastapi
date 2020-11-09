@@ -11,6 +11,7 @@ exports.APP_NAME = "Theta Technolabs";
 
 //default page size
 exports.PAGE_SIZE = 10;
+exports.PAGE_SIZE_25 = 25;
 
 //firebase api key
 exports.FIREBASE_MOBILE_KEY = "AAAAeaRKIMg:APA91bETCdKZMFjZb-Ht0WaB3eZUx4bV5ELt9QHs5NYpegMZ_P7BD9jdv7G25Oi2zBM5maWGuFN3rMG8N7Y3Kn1adVekwTrh05VdBfebXQrVtrG7VnKKBYPmj";

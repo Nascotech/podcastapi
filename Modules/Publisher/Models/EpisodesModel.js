@@ -13,6 +13,8 @@ let mongooseValidationErrorTransform = require('mongoose-validation-error-transf
 let schema = new Schema({
 
     podcast: {type: String, required: true, ref: constants.PodcastsModel},
+    publisher: {type: String, required: true, ref: constants.UserModel},
+    sgPodcastId: {type: Number, required: true},
     title: {type: String, required: true},
     description: {type: String},
     guid: {type: String, required: true},

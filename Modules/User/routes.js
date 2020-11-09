@@ -65,9 +65,9 @@ module.exports = function (router) {
     //podcast API
     router.post('/api/checkUserToken', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.checkUserToken);
     router.post('/api/getOauthToken', RecastController.getOauthToken);
-    router.post('/api/getPodcasts', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getPodcasts);
-    router.get('/api/getPodcastDetails/:podcastId', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getPodcastDetails);
-    router.get('/api/getPodcastEpisodes/:podcastId', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getPodcastEpisodes);
-    router.post('/api/getGroups', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getGroups);
-    router.get('/api/userGroups/:publisherId', VerifySuperAdmin, RecastController.checkPublisher, RecastController.checkToken, RecastController.updateToken, RecastController.getGroups);
+    //router.post('/api/getPodcasts', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getPodcasts);
+    //router.get('/api/getPodcastDetails/:podcastId', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getPodcastDetails);
+    // router.get('/api/getPodcastEpisodes/:podcastId', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getPodcastEpisodes);
+    //router.post('/api/getGroups', VerifyRecastToken, RecastController.checkToken, RecastController.updateToken, RecastController.getGroups);
+    // router.get('/api/userGroups/:publisherId', VerifySuperAdmin, RecastController.checkPublisher, RecastController.checkToken, RecastController.updateToken, RecastController.getGroups);
 };
