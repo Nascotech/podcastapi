@@ -25,7 +25,7 @@ let schema = new Schema({
     image: {type: String},
     pubDate: {type: Date},
 }, {
-  collection: constants.EpisodesModel, autoIndex: true, usePushEach: true,
+  collection: constants.EpisodesModel, autoIndex: true, timestamps: true, usePushEach: true,
   toObject: {
     transform: function (doc, obj) {
       obj.id = obj._id;
