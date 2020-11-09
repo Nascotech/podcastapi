@@ -217,6 +217,7 @@ let PublisherCronjob = {
           podcastsModel.lighterColor = podcast.lighterColor;
           podcastsModel.fontSelect = podcast.fontSelect;
           podcastsModel.save().then(async result => {
+            await EpisodesModel.deleteMany({"podcast": result.id});
             return await syncEpisodesListIntoDatabase(podcast.items, result, userInfo.id);
           }).then(result => {
             resolve(true);
