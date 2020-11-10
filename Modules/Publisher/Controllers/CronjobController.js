@@ -296,7 +296,7 @@ let PublisherCronjob = {
       return new Promise(async function (resolve, reject) {
         let input = await axios({ url: imageUrl, responseType: "arraybuffer" });
         let ext = path.extname(imageUrl);
-        sharp(input.data).resize(150,150).toBuffer().then( result => {
+        sharp(input.data).resize(240,240).toBuffer().then( result => {
           let params = {
             Bucket: masterConfig['BUCKET_NAME'],
             Key: pathName + name + ext,
