@@ -463,7 +463,7 @@ let Publisher = {
 
               request(options, function (err, result, body) {
                 if (err) console.log(err);
-                if (result.statusCode == 200) {
+                if (result && result.statusCode == 200) {
                   let finalRes = JSON.parse(result.body);
                   user.sgTokenType = finalRes.token_type;
                   user.sgAccessToken = finalRes.access_token;
