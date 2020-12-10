@@ -74,9 +74,22 @@ let PublisherCronjob = {
 
     function fetchPodcastList(userInfo, collectionInfo, oldPodcastArr) {
       return new Promise(async function (resolve, reject) {
-        let podcastList = await fetchPodcast(userInfo, collectionInfo);
-        let groups =  await updateGroups(userInfo, podcastList);
-        resolve(podcastDiff(userInfo, oldPodcastArr, podcastList, collectionInfo));
+        let firstPodcastList = await fetchPodcast(userInfo, collectionInfo, 1);
+        if(firstPodcastList && firstPodcastList.meta.last_page > 1) {
+          resolve(fetchRemainingPodcast(userInfo, collectionInfo, firstPodcastList.meta.last_page, oldPodcastArr, firstPodcastList.data));
+        } else {
+          resolve(podcastDiff(userInfo, oldPodcastArr, JSON.stringify(firstPodcastList.data), collectionInfo));
+        }
+      });
+    }
+
+    function fetchRemainingPodcast(userInfo, collectionInfo, lastPage, oldPodcastArr, newPodcastArr) {
+      return new Promise(async function (resolve, reject) {
+        for (let i = 2; i <= lastPage; i++) {
+          let result = await fetchPodcast(userInfo, collectionInfo, i);
+          newPodcastArr = await newPodcastArr.concat(result.data);
+        }
+        resolve(podcastDiff(userInfo, oldPodcastArr, JSON.stringify(newPodcastArr), collectionInfo));
       });
     }
 
@@ -104,6 +117,7 @@ let PublisherCronjob = {
 
     function podcastDiff(userInfo, oldPodcastArr, newPodcastArr, collectionInfo) {
       return new Promise(async function (resolve, reject) {
+        await updateGroups(userInfo, newPodcastArr);
         let result = await arrayDiff(JSON.parse(oldPodcastArr), JSON.parse(newPodcastArr), 'id');
         let addPodcast = (result.added.length > 0) ? await syncPodcastListIntoDatabase(result.added, userInfo, collectionInfo) : true;
         let commonPodcast = (result.common.length > 0) ? await syncPodcastListIntoDatabase(result.common, userInfo, collectionInfo) : true;
@@ -117,9 +131,9 @@ let PublisherCronjob = {
       });
     }
 
-    function fetchPodcast(userInfo, collectionInfo) {
+    function fetchPodcast(userInfo, collectionInfo, pageNo) {
       return new Promise(async function (resolve, reject) {
-        let url = userInfo.sgBaseUrl + 'api/v1/collections/view/' + collectionInfo.id;
+        let url = userInfo.sgBaseUrl + 'api/v1/collections/view/' + collectionInfo.id + '?length=100&page=' + pageNo;
         let headers = {
           Connection: 'keep-alive',
           Accept: '*/*',
@@ -128,7 +142,25 @@ let PublisherCronjob = {
         await fetch(url, { method: 'GET', headers: headers}).then((res) => {
           return res.json()
         }).then((json) => {
-          resolve(JSON.stringify(json.items));
+          resolve(json);
+        }).catch(err => {
+          resolve('[]');
+        });
+      })
+    }
+
+    function fetchEpisode(userInfo, podcast, pageNo) {
+      return new Promise(async function (resolve, reject) {
+        let url = userInfo.sgBaseUrl + 'api/v1/sgrecast/podcasts/feeds/episodes/' + podcast.podcastId + '?length=100&page=' + pageNo;
+        let headers = {
+          Connection: 'keep-alive',
+          Accept: '*/*',
+          Authorization: userInfo.sgTokenType + ' ' + userInfo.sgAccessToken
+        }
+        await fetch(url, { method: 'GET', headers: headers}).then((res) => {
+          return res.json()
+        }).then((json) => {
+          resolve(json);
         }).catch(err => {
           resolve('[]');
         });
@@ -218,7 +250,7 @@ let PublisherCronjob = {
           podcastsModel.fontSelect = podcast.fontSelect;
           podcastsModel.save().then(async result => {
             await EpisodesModel.deleteMany({"podcast": result.id});
-            return await syncEpisodesListIntoDatabase(podcast.items, result, userInfo.id);
+            return await fetchEpisodeList(userInfo, result);
           }).then(result => {
             resolve(true);
           }).catch(err => {
@@ -230,12 +262,33 @@ let PublisherCronjob = {
       });
     }
 
-    function syncEpisodesListIntoDatabase(episodeList, podcast, publisherId) {
+    function fetchEpisodeList(userInfo, podcast) {
+      return new Promise(async function (resolve, reject) {
+        let firstEpisodeList = await fetchEpisode(userInfo, podcast, 1);
+        if(firstEpisodeList && firstEpisodeList.meta.last_page > 1) {
+          resolve(fetchRemainingEpisodes(userInfo, podcast, firstEpisodeList.meta.last_page, firstEpisodeList.data));
+        } else {
+          resolve(syncEpisodesListIntoDatabase(firstEpisodeList, podcast));
+        }
+      });
+    }
+
+    function fetchRemainingEpisodes(userInfo, podcast, lastPage, newEpisodeArr) {
+      return new Promise(async function (resolve, reject) {
+        for (let i = 2; i <= lastPage; i++) {
+          let result = await fetchEpisode(userInfo, podcast, i);
+          newEpisodeArr = await newEpisodeArr.concat(result.data);
+        }
+        resolve(syncEpisodesListIntoDatabase(newEpisodeArr, podcast));
+      });
+    }
+
+    function syncEpisodesListIntoDatabase(episodeList, podcast) {
       return new Promise(function (resolve, reject) {
         if(episodeList.length > 0) {
           let count = 0;
           episodeList.forEach(async episodeInfo => {
-            await updateEpisode(episodeInfo, podcast, publisherId);
+            await updateEpisode(episodeInfo, podcast);
             count++;
             if (episodeList.length == count) {
               resolve(true);
@@ -247,22 +300,21 @@ let PublisherCronjob = {
       })
     }
 
-    function updateEpisode(episodeInfo, podcast, publisherId) {
+    function updateEpisode(episodeInfo, podcast) {
       return new Promise(async function (resolve, reject) {
-        let newImage = (podcast.image) ? podcast.image : '';
-        EpisodesModel.findOne({"guid": episodeInfo.guid, podcast: podcast.id}).then(episodeModel => {
+        EpisodesModel.findOne({"guid": episodeInfo.guid.value, podcast: podcast.id}).then(episodeModel => {
           if(!episodeModel) episodeModel = new EpisodesModel();
           episodeModel.podcast = podcast.id;
-          episodeModel.publisher = publisherId;
+          episodeModel.publisher = podcast.publisher;
           episodeModel.sgPodcastId = podcast.podcastId;
           episodeModel.title = episodeInfo.title;
           episodeModel.description = episodeInfo.description;
-          episodeModel.guid = episodeInfo.guid;
+          episodeModel.guid = episodeInfo.guid.value;
           episodeModel.url = episodeInfo.url;
           episodeModel.type = episodeInfo.type;
           episodeModel.length = episodeInfo.length;
           episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
-          episodeModel.image = newImage;
+          episodeModel.image = podcast.image;
           episodeModel.pubDate = new Date(episodeInfo.pubDate);
           episodeModel.save().then(result => {
             resolve(true);
@@ -294,23 +346,30 @@ let PublisherCronjob = {
 
     function imageResize(imageUrl, pathName, name) {
       return new Promise(async function (resolve, reject) {
-        let input = await axios({ url: imageUrl, responseType: "arraybuffer" });
-        let ext = path.extname(imageUrl);
-        sharp(input.data).resize(240,240).toBuffer().then( result => {
-          let params = {
-            Bucket: masterConfig['BUCKET_NAME'],
-            Key: pathName + name + ext,
-            ACL: "public-read",
-            Body: result,
-          };
-          s3.upload(params, function (s3Err, data) {
-            if (s3Err) {
-              resolve(imageUrl)
-            } else {
-              resolve(data.Location);
-            }
-          });
-        }).catch( err => {
+        await axios({ url: imageUrl, responseType: "arraybuffer" }).then(function (response) {
+          if(response.status == 200) {
+            let ext = path.extname(imageUrl);
+            sharp(response.data).resize(240,240).toBuffer().then( result => {
+              let params = {
+                Bucket: masterConfig['BUCKET_NAME'],
+                Key: pathName + name + ext,
+                ACL: "public-read",
+                Body: result,
+              };
+              s3.upload(params, function (s3Err, data) {
+                if (s3Err) {
+                  resolve(imageUrl);
+                } else {
+                  resolve(data.Location);
+                }
+              });
+            }).catch( err => {
+              resolve(imageUrl);
+            });
+          } else {
+            resolve(imageUrl);
+          }
+        }).catch(function (error) {
           resolve(imageUrl);
         });
       });
@@ -349,8 +408,10 @@ let PublisherCronjob = {
       }
     }).then(result => {
       console.log("Podcasts sync successfully");
+      //responseHandler.sendSuccess(response, "Podcasts sync successfully");
     }).catch(err => {
-      console.log(err)
+      console.log(err);
+      //responseHandler.sendInternalServerError(response, err, err.name);
     });
   },
 
