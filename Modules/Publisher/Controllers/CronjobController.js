@@ -418,10 +418,12 @@ let PublisherCronjob = {
   syncGroupList: function (request, response) {
 
     function getAllUsers(users) {
-      return new Promise(function (resolve, reject) {
+      return new Promise(async function (resolve, reject) {
         let count = 0;
+        let roleModel = await RolesModel.findOne({slug: varConst.PUBLISHER});
+        let atunwaUser = await UserModel.findOne({'sgUsername': "pthakur@plenartech.com", 'role': roleModel.id});
+        let list = await fetchGroupsList(atunwaUser);
         users.forEach(async user => {
-          let list = await fetchGroupsList(user);
           let test = await updateUserGroups(list, user);
           count++;
           if (users.length == count) {
@@ -474,7 +476,7 @@ let PublisherCronjob = {
 
     function fetchGroupsList(userInfo, oldPodcastArr) {
       return new Promise(function (resolve, reject) {
-        let url = userInfo.sgBaseUrl + '/api/v1/groups?page=1&length=1000';
+        let url = userInfo.sgBaseUrl + 'api/v1/groups?page=1&length=1000';
         let headers = {
           Connection: 'keep-alive',
           Accept: '*/*',
@@ -485,6 +487,7 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json.data);
         }).catch(err => {
+          console.log(err);
           resolve([]);
         });
       });
