@@ -16,9 +16,9 @@ let CronjobController = require('./Controllers/CronjobController');
 let PodcastController = require('./Controllers/PodcastController');
 
 // every 1 minute check if new publisher then add access token
-cron.schedule('* */1 * * * *', () => {
-  PublisherController.syncPublisherInfo();
-});
+// cron.schedule('* */1 * * * *', () => {
+//   PublisherController.syncPublisherInfo();
+// });
 
 // every 2 hour cron job will refresh-token
 // cron.schedule('0 0 */2 * * *', () => {
