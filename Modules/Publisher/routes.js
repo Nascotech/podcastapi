@@ -20,19 +20,18 @@ cron.schedule('* */1 * * * *', () => {
   PublisherController.syncPublisherInfo();
 });
 
-// every 2 hour cron job will refresh-token
-// cron.schedule('0 0 */2 * * *', () => {
-//     PublisherController.publisherCronjob();
-// });
+// every month cron job will refresh-token
+cron.schedule('* * * 1 * *', () => {
+  PublisherController.publisherCronjob();
+});
 
-// every 5 hour cron job will sync groups
-cron.schedule('0 0 */5 * * *', () => {
-  PublisherController.syncGroupList();
+// every 4 hour cron job will sync groups
+cron.schedule('0 0 */4 * * *', () => {
+  CronjobController.syncGroupList();
 });
 
 //every 3 hour cron job will sync podcast list
 cron.schedule('0 0 */3 * * *', () => {
-//cron.schedule('* */5 * * * *', () => {
   CronjobController.syncPodcastList();
 });
 
