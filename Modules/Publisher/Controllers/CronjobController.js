@@ -144,7 +144,7 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json);
         }).catch(err => {
-          resolve('[]');
+          resolve([]);
         });
       })
     }
@@ -162,7 +162,7 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json);
         }).catch(err => {
-          resolve('[]');
+          resolve([]);
         });
       })
     }
@@ -265,7 +265,7 @@ let PublisherCronjob = {
     function fetchEpisodeList(userInfo, podcast) {
       return new Promise(async function (resolve, reject) {
         let firstEpisodeList = await fetchEpisode(userInfo, podcast, 1);
-        if(firstEpisodeList && firstEpisodeList.meta.last_page > 1) {
+        if(firstEpisodeList && firstEpisodeList.meta && firstEpisodeList.meta.last_page > 1) {
           resolve(fetchRemainingEpisodes(userInfo, podcast, firstEpisodeList.meta.last_page, firstEpisodeList.data));
         } else {
           resolve(syncEpisodesListIntoDatabase(firstEpisodeList, podcast));
@@ -285,7 +285,7 @@ let PublisherCronjob = {
 
     function syncEpisodesListIntoDatabase(episodeList, podcast) {
       return new Promise(function (resolve, reject) {
-        if(episodeList.length > 0) {
+        if(Array.isArray(episodeList) && episodeList.length && episodeList.length > 0) {
           let count = 0;
           episodeList.forEach(async episodeInfo => {
             await updateEpisode(episodeInfo, podcast);

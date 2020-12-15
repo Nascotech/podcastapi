@@ -460,7 +460,7 @@ let Publisher = {
                       password: user.sgPassword
                   }
               };
-
+              
               request(options, function (err, result, body) {
                 if (err) console.log(err);
                 if (result && result.statusCode == 200) {
@@ -747,7 +747,7 @@ let syncNewPublisher = function (req, res) {
     return new Promise(function (resolve, reject) {
         RolesModel.findOne({slug: varConst.PUBLISHER}, function (err, result) {
             if (err) reject(err);
-            UserModel.find({role: result.id, 'isSync': varConst.INACTIVE}, function (err, result) {
+            UserModel.find({role: result.id, 'isSync': varConst.INACTIVE, 'isDeleted': varConst.NOT_DELETED}, function (err, result) {
                 if (err) reject(err);
                 resolve(result);
             })
