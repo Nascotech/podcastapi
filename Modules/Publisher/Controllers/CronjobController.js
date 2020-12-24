@@ -9,6 +9,7 @@ let HttpStatus = require('http-status-codes');
 let async = require('async');
 let path = require('path');
 let fs = require('fs');
+let logStream = fs.createWriteStream('./cronjob.log', {flags: 'a'});
 let aws = require('aws-sdk');
 let multerS3 = require('multer-s3');
 let bcrypt = require('bcryptjs');
@@ -27,6 +28,7 @@ let s3 = new aws.S3({
   accessKeyId: masterConfig['SECRET_KEY_ID'],
   endpoint: spacesEndpoint
 });
+let cronjobStartTime = `UTC Time: ${Date()} \nIndia Time: ${new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})} \nUSA Time: ${new Date().toLocaleString("en-US", {timeZone: "America/New_York"})}`;
 
 //Models
 let UserModel = mongoose.model(constants.UserModel);
@@ -144,6 +146,8 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json);
         }).catch(err => {
+          logStream.write("\nError while fetching podcast list - " + userInfo.publisherName);
+          logStream.write("\n" + err);
           resolve([]);
         });
       })
@@ -162,6 +166,7 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json);
         }).catch(err => {
+          logStream.write("\nError while fetching episode list - " + userInfo.publisherName);
           resolve([]);
         });
       })
@@ -193,6 +198,7 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json.data);
         }).catch(err => {
+          logStream.write("\nError while fetching collection list - " + userInfo.publisherName);
           resolve([]);
         });
       })
@@ -217,9 +223,9 @@ let PublisherCronjob = {
 
     function updatePodcast(podcast, userInfo, collectionInfo) {
       return new Promise(async function (resolve, reject) {
-        let dirName = 'uploads/publisher_' + userInfo.id + '/podcast_' + podcast.id + '/';
-        let fileName = 'poscast_img_' + podcast.id;
-        let newImage = (podcast.image) ? await imageResize(podcast.image, dirName, fileName) : '';
+        // let dirName = 'uploads/publisher_' + userInfo.id + '/podcast_' + podcast.id + '/';
+        // let fileName = 'poscast_img_' + podcast.id;
+        // let newImage = (podcast.image) ? await imageResize(podcast.image, dirName, fileName) : '';
         PodcastsModel.findOne({"publisher": userInfo.id, podcastId: podcast.id}).then(podcastsModel => {
           if(!podcastsModel) podcastsModel = new PodcastsModel();
           podcastsModel.podcastId = podcast.id;
@@ -233,7 +239,7 @@ let PublisherCronjob = {
           podcastsModel.xmlFilename = podcast.xmlFilename;
           podcastsModel.prefixUrl = podcast.prefixUrl;
           podcastsModel.limit = podcast.limit;
-          podcastsModel.image = newImage;
+          //podcastsModel.image = newImage;
           podcastsModel.rssFeed = podcast.rssFeed;
           podcastsModel.categories = podcast.categories;
           podcastsModel.syndications = podcast.syndications;
@@ -302,9 +308,9 @@ let PublisherCronjob = {
 
     function updateEpisode(episodeInfo, podcast) {
       return new Promise(async function (resolve, reject) {
-        let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
-        let fileName = 'episode_img_' + episodeInfo.guid.value;
-        let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
+        // let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
+        // let fileName = 'episode_img_' + episodeInfo.guid.value;
+        // let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
         EpisodesModel.findOne({"guid": episodeInfo.guid.value, podcast: podcast.id}).then(episodeModel => {
           if(!episodeModel) episodeModel = new EpisodesModel();
           episodeModel.podcast = podcast.id;
@@ -317,7 +323,7 @@ let PublisherCronjob = {
           episodeModel.type = episodeInfo.type;
           episodeModel.length = episodeInfo.length;
           episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
-          episodeModel.image = newImage;
+          //episodeModel.image = newImage;
           episodeModel.pubDate = new Date(episodeInfo.pubDate);
           episodeModel.save().then(result => {
             resolve(true);
@@ -404,6 +410,8 @@ let PublisherCronjob = {
     }
 
     RoleUserModel().then(users => {
+      logStream.write("\n======================== START PODCAST & EPISODES CRONJOB ================================");
+      logStream.write("\n" + cronjobStartTime);
       if(users.length > 0) {
         return allUserList(users);
       } else {
@@ -411,10 +419,12 @@ let PublisherCronjob = {
       }
     }).then(result => {
       console.log("Podcasts sync successfully");
-      //responseHandler.sendSuccess(response, "Podcasts sync successfully");
+      logStream.write("\nPodcasts sync successfully");
+      logStream.write("\n======================== END PODCAST & EPISODES CRONJOB ================================");
     }).catch(err => {
       console.log(err);
-      //responseHandler.sendInternalServerError(response, err, err.name);
+      logStream.write("\n"+err);
+      logStream.write("\n======================== END PODCAST & EPISODES CRONJOB ================================");
     });
   },
 
@@ -491,23 +501,28 @@ let PublisherCronjob = {
           resolve(json.data);
         }).catch(err => {
           console.log(err);
+          logStream.write("\nError while fetching group list - " + userInfo.publisherName);
           resolve([]);
         });
       });
     }
 
     RoleUserModel().then(users => {
+      logStream.write("\n======================== START GROUPS CRONJOB ================================");
+      logStream.write("\n" + cronjobStartTime);
       if(users.length > 0) {
         return getAllUsers(users);
       } else {
         return true;
       }
     }).then(result => {
-      //responseHandler.sendSuccess(response, result);
       console.log("Groups sync successfully");
+      logStream.write("\nGroups sync successfully");
+      logStream.write("\n======================== END GROUPS CRONJOB ================================");
     }).catch(err => {
-      //responseHandler.sendInternalServerError(response, err, err.name);
-      console.log(err)
+      console.log(err);
+      logStream.write("\n"+err);
+      logStream.write("\n======================== END GROUPS CRONJOB ================================");
     });
   }
 };

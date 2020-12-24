@@ -10,3 +10,4 @@ package-lock.json
 /uploads
 .tags
 .tags1
+cronjob.log
