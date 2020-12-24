@@ -314,7 +314,7 @@ let PublisherCronjob = {
           episodeModel.type = episodeInfo.type;
           episodeModel.length = episodeInfo.length;
           episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
-          episodeModel.image = podcast.image;
+          episodeModel.image = episodeInfo.image.link;
           episodeModel.pubDate = new Date(episodeInfo.pubDate);
           episodeModel.save().then(result => {
             resolve(true);
