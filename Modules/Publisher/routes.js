@@ -30,9 +30,10 @@ cron.schedule('0 0 */4 * * *', () => {
   CronjobController.syncGroupList();
 });
 
-//every 3 hour cron job will sync podcast list
-cron.schedule('0 0 */1 * * *', () => {
-  CronjobController.syncPodcastList();
+//every 1 hour cron job will sync podcast list
+cron.schedule('0 */1 * * * *', async () => {
+  await CronjobController.syncPodcastList();
+  await CronjobController.syncGroupList();
 });
 
 let userUpload = multer({
