@@ -302,6 +302,9 @@ let PublisherCronjob = {
 
     function updateEpisode(episodeInfo, podcast) {
       return new Promise(async function (resolve, reject) {
+        let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
+        let fileName = 'poscast_img_' + podcast.id;
+        let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
         EpisodesModel.findOne({"guid": episodeInfo.guid.value, podcast: podcast.id}).then(episodeModel => {
           if(!episodeModel) episodeModel = new EpisodesModel();
           episodeModel.podcast = podcast.id;
@@ -314,7 +317,7 @@ let PublisherCronjob = {
           episodeModel.type = episodeInfo.type;
           episodeModel.length = episodeInfo.length;
           episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
-          episodeModel.image = episodeInfo.image.link;
+          episodeModel.image = newImage;
           episodeModel.pubDate = new Date(episodeInfo.pubDate);
           episodeModel.save().then(result => {
             resolve(true);
