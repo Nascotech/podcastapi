@@ -303,7 +303,7 @@ let PublisherCronjob = {
     function updateEpisode(episodeInfo, podcast) {
       return new Promise(async function (resolve, reject) {
         let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
-        let fileName = 'poscast_img_' + podcast.id;
+        let fileName = 'episode_img_' + episodeInfo.guid.value;
         let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
         EpisodesModel.findOne({"guid": episodeInfo.guid.value, podcast: podcast.id}).then(episodeModel => {
           if(!episodeModel) episodeModel = new EpisodesModel();
