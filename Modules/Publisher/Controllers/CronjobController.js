@@ -268,7 +268,7 @@ let PublisherCronjob = {
         if(firstEpisodeList && firstEpisodeList.meta && firstEpisodeList.meta.last_page > 1) {
           resolve(fetchRemainingEpisodes(userInfo, podcast, firstEpisodeList.meta.last_page, firstEpisodeList.data));
         } else {
-          resolve(syncEpisodesListIntoDatabase(firstEpisodeList, podcast));
+          resolve(syncEpisodesListIntoDatabase(firstEpisodeList.data, podcast));
         }
       });
     }
