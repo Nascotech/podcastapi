@@ -21,9 +21,9 @@ let PodcastController = require('./Controllers/PodcastController');
 // });
 
 // every month cron job will refresh-token
-cron.schedule('* * * 1 * *', () => {
-  PublisherController.publisherCronjob();
-});
+// cron.schedule('* * * 1 * *', () => {
+//   PublisherController.publisherCronjob();
+// });
 
 // every 4 hour cron job will sync groups
 cron.schedule('0 0 */4 * * *', () => {
@@ -31,7 +31,7 @@ cron.schedule('0 0 */4 * * *', () => {
 });
 
 //every 3 hour cron job will sync podcast list
-cron.schedule('0 0 */3 * * *', () => {
+cron.schedule('0 0 */1 * * *', () => {
   CronjobController.syncPodcastList();
 });
 
