@@ -37,15 +37,52 @@ let Publisher = {
       });
     },
 
+    checkAccessToken: function(request, response, next) {
+
+      let input = request.body;
+      request.body.sgBaseUrl = input.sgBaseUrl.replace(/\/?(\?|#|$)/, '/$1');
+
+      let options = {
+        url: input.sgBaseUrl + 'oauth/token',
+        method: 'POST',
+        headers: {
+          Connection: 'keep-alive',
+          Accept: '*/*',
+          'content-type': 'multipart/form-data;'
+        },
+        formData: {
+          username: input.sgUsername,
+          client_secret: input.sgClientSecret,
+          grant_type: input.sgGrantType,
+          client_id: input.sgClientId,
+          scope: input.sgScope,
+          password: input.password
+        }
+      };
+
+      requestAPI(options, function (err, result, body) {
+        if (!err && result.statusCode == 200 && IsJsonString(result.body)) {
+          let finalRes = JSON.parse(result.body);
+          request.body.sgAccessToken = finalRes.access_token;
+          request.body.sgRefreshToken = finalRes.refresh_token;
+          next();
+        } else {
+          responseHandler.sendSuccess(response, "", "The user credentials were incorrect.");
+        }
+      });
+    },
+
     addPublisher: function (request, response, next) {
 
       let input = request.body;
       UserModel.findOne({'email': input.email.toLowerCase()}, function (err, publisher) {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
-        } else if (publisher) {
-          responseHandler.sendSuccess(response, "", stringConstants.UserAlreadyExist);
-        } else {
+        }
+        // else if (publisher) {
+        //   responseHandler.sendSuccess(response, "", stringConstants.UserAlreadyExist);
+        // }
+        else {
           let userModel = new UserModel();
           userModel.email = input.email.toLowerCase();
           userModel.accessToken = randomString(48);
@@ -69,6 +106,8 @@ let Publisher = {
           userModel.sgPassword = input.password;
           userModel.headerColor = input.headerColor;
           userModel.footerColor = input.footerColor;
+          userModel.sgAccessToken = input.sgAccessToken;
+          userModel.sgRefreshToken = input.sgRefreshToken;
           userModel.isResetPassword = varConst.ACTIVE;
           userModel.isActive = input.isActive;
           userModel.save(function (err, finalRes) {
@@ -110,6 +149,8 @@ let Publisher = {
           userModel.sgPassword = input.password;
           userModel.headerColor = input.headerColor;
           userModel.footerColor = input.footerColor;
+          userModel.sgAccessToken = input.sgAccessToken;
+          userModel.sgRefreshToken = input.sgRefreshToken;
           userModel.isActive = input.isActive;
           userModel.save(function (err, finalRes) {
             if (err) {
@@ -761,4 +802,13 @@ function randomString(len, charSet) {
       randomString += charSet.substring(randomPoz,randomPoz+1);
   }
   return randomString;
+}
+
+function IsJsonString(str) {
+  try {
+      JSON.parse(str);
+  } catch (e) {
+      return false;
+  }
+  return true;
 }
