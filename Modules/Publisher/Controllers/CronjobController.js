@@ -223,9 +223,9 @@ let PublisherCronjob = {
 
     function updatePodcast(podcast, userInfo, collectionInfo) {
       return new Promise(async function (resolve, reject) {
-        // let dirName = 'uploads/publisher_' + userInfo.id + '/podcast_' + podcast.id + '/';
-        // let fileName = 'poscast_img_' + podcast.id;
-        // let newImage = (podcast.image) ? await imageResize(podcast.image, dirName, fileName) : '';
+        let dirName = 'uploads/publisher_' + userInfo.id + '/podcast_' + podcast.id + '/';
+        let fileName = 'poscast_img_' + podcast.id;
+        let newImage = (podcast.image) ? await imageResize(podcast.image, dirName, fileName) : '';
         PodcastsModel.findOne({"publisher": userInfo.id, podcastId: podcast.id}).then(podcastsModel => {
           if(!podcastsModel) podcastsModel = new PodcastsModel();
           podcastsModel.podcastId = podcast.id;
@@ -239,7 +239,7 @@ let PublisherCronjob = {
           podcastsModel.xmlFilename = podcast.xmlFilename;
           podcastsModel.prefixUrl = podcast.prefixUrl;
           podcastsModel.limit = podcast.limit;
-          //podcastsModel.image = newImage;
+          podcastsModel.image = newImage;
           podcastsModel.rssFeed = podcast.rssFeed;
           podcastsModel.categories = podcast.categories;
           podcastsModel.syndications = podcast.syndications;
@@ -308,9 +308,9 @@ let PublisherCronjob = {
 
     function updateEpisode(episodeInfo, podcast) {
       return new Promise(async function (resolve, reject) {
-        // let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
-        // let fileName = 'episode_img_' + episodeInfo.guid.value;
-        // let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
+        let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
+        let fileName = 'episode_img_' + episodeInfo.guid.value;
+        let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
         EpisodesModel.findOne({"guid": episodeInfo.guid.value, podcast: podcast.id}).then(episodeModel => {
           if(!episodeModel) episodeModel = new EpisodesModel();
           episodeModel.podcast = podcast.id;
@@ -323,7 +323,7 @@ let PublisherCronjob = {
           episodeModel.type = episodeInfo.type;
           episodeModel.length = episodeInfo.length;
           episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
-          //episodeModel.image = newImage;
+          episodeModel.image = newImage;
           episodeModel.pubDate = new Date(episodeInfo.pubDate);
           episodeModel.save().then(result => {
             resolve(true);
