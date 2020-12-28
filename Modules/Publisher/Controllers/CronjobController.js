@@ -14,6 +14,7 @@ let aws = require('aws-sdk');
 let multerS3 = require('multer-s3');
 let bcrypt = require('bcryptjs');
 const fetch = require('node-fetch');
+const FormData = require('form-data');
 const sharp = require('sharp');
 const axios = require('axios');
 let constants = require('../../../Utils/ModelConstants');
@@ -100,7 +101,7 @@ let PublisherCronjob = {
         let finalRes = JSON.parse(podcastLists);
         if(finalRes.length > 0) {
           let groupsArr = await finalRes.map(podcast => podcast.group);
-          var uSet = new Set(groupsArr);
+          let uSet = new Set(groupsArr);
           UserModel.findOne({"_id": userInfo.id}).then(userModel => {
             userModel.podcastsGroups = [...uSet];
             userModel.save().then(result => {
@@ -133,6 +134,32 @@ let PublisherCronjob = {
       });
     }
 
+    function fetchCollection(userInfo) {
+      return new Promise(function (resolve, reject) {
+        let url = userInfo.sgBaseUrl + 'api/v1/collections';
+        let headers = {
+          Connection: 'keep-alive',
+          Accept: '*/*',
+          Authorization: userInfo.sgTokenType + ' ' + userInfo.sgAccessToken
+        }
+        fetch(url, { method: 'GET', headers: headers}).then(async (res) => {
+          let contentType = res.headers.get("content-type");
+          if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
+            return res.json();
+          } else {
+            let test = await updateAccessToken(userInfo);
+            return {data: []};
+          }
+        }).then(result => {
+          resolve(result.data);
+        }).catch(err => {
+          logStream.write("\n"+err);
+          logStream.write("\nError while fetching collection list - " + userInfo.publisherName);
+          reject(false);
+        });
+      })
+    }
+
     function fetchPodcast(userInfo, collectionInfo, pageNo) {
       return new Promise(async function (resolve, reject) {
         let url = userInfo.sgBaseUrl + 'api/v1/collections/view/' + collectionInfo.id + '?length=100&page=' + pageNo;
@@ -141,14 +168,20 @@ let PublisherCronjob = {
           Accept: '*/*',
           Authorization: userInfo.sgTokenType + ' ' + userInfo.sgAccessToken
         }
-        await fetch(url, { method: 'GET', headers: headers}).then((res) => {
-          return res.json()
+        await fetch(url, { method: 'GET', headers: headers}).then(async (res) => {
+          let contentType = res.headers.get("content-type");
+          if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
+            return res.json();
+          } else {
+            let test = await updateAccessToken(userInfo);
+            return {data: []};
+          }
         }).then((json) => {
           resolve(json);
         }).catch(err => {
           logStream.write("\n"+err);
           logStream.write("\nError while fetching podcast list - " + userInfo.publisherName);
-          resolve([]);
+          reject(false);
         });
       })
     }
@@ -161,14 +194,20 @@ let PublisherCronjob = {
           Accept: '*/*',
           Authorization: userInfo.sgTokenType + ' ' + userInfo.sgAccessToken
         }
-        await fetch(url, { method: 'GET', headers: headers}).then((res) => {
-          return res.json()
+        await fetch(url, { method: 'GET', headers: headers}).then(async (res) => {
+          let contentType = res.headers.get("content-type");
+          if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
+            return res.json();
+          } else {
+            let test = await updateAccessToken(userInfo);
+            return {data: []};
+          }
         }).then((json) => {
           resolve(json);
         }).catch(err => {
           logStream.write("\n"+err);
           logStream.write("\nError while fetching episode list - " + userInfo.publisherName);
-          resolve([]);
+          reject(false);
         });
       })
     }
@@ -184,26 +223,6 @@ let PublisherCronjob = {
           }
         });
       });
-    }
-
-    function fetchCollection(userInfo, oldPodcastArr) {
-      return new Promise(function (resolve, reject) {
-        let url = userInfo.sgBaseUrl + 'api/v1/collections';
-        let headers = {
-          Connection: 'keep-alive',
-          Accept: '*/*',
-          Authorization: userInfo.sgTokenType + ' ' + userInfo.sgAccessToken
-        }
-        fetch(url, { method: 'GET', headers: headers}).then((res) => {
-           return res.json()
-        }).then((json) => {
-          resolve(json.data);
-        }).catch(err => {
-          logStream.write("\n"+err);
-          logStream.write("\nError while fetching collection list - " + userInfo.publisherName);
-          resolve([]);
-        });
-      })
     }
 
     function syncPodcastListIntoDatabase(podcastLists, userInfo, collectionInfo) {
@@ -272,7 +291,7 @@ let PublisherCronjob = {
 
     function fetchEpisodeList(userInfo, podcast) {
       return new Promise(async function (resolve, reject) {
-        let firstEpisodeList = await fetchEpisode(userInfo, podcast, 1);
+        let firstEpisodeList = await fetchEpisode(userInfo, podcast, 1) || [];
         if(firstEpisodeList && firstEpisodeList.meta && firstEpisodeList.meta.last_page > 1) {
           resolve(fetchRemainingEpisodes(userInfo, podcast, firstEpisodeList.meta.last_page, firstEpisodeList.data));
         } else {
@@ -530,6 +549,33 @@ let PublisherCronjob = {
 };
 module.exports = PublisherCronjob;
 
+function updateAccessToken(userInfo) {
+  return new Promise(function (resolve, reject) {
+    let url = userInfo.sgBaseUrl + 'oauth/token';
+    const form = new FormData();
+    form.append('client_secret', userInfo.sgClientSecret);
+    form.append('refresh_token', userInfo.sgRefreshToken);
+    form.append('scope', userInfo.sgScope);
+    form.append('client_id', userInfo.sgClientId);
+    form.append('grant_type', "refresh_token");
+    fetch(url, { method: 'POST', body: form}).then(async (res) => {
+      let contentType = res.headers.get("content-type");
+      if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
+        return res.json();
+      } else {
+        return false;
+      }
+    }).then(async result => {
+      if(result) await UserModel.updateOne({'_id': userInfo.id}, {$set: {"sgTokenType": result.token_type, "sgAccessToken": result.access_token, "sgRefreshToken": result.refresh_token}});
+      resolve(result);
+    }).catch(err => {
+      logStream.write("\nError while fetching refresh token - " + userInfo.publisherName);
+      logStream.write("\n"+err);
+      reject(false);
+    });
+  });
+}
+
 let RoleUserModel = function (req, res) {
   return new Promise(function (resolve, reject) {
     RolesModel.findOne({slug: varConst.PUBLISHER}).then(roleModel => {
@@ -542,4 +588,13 @@ let RoleUserModel = function (req, res) {
       reject(err);
     });
   });
+};
+
+function IsJsonString(str) {
+  try {
+      JSON.parse(str);
+  } catch (e) {
+      return false;
+  }
+  return true;
 }
