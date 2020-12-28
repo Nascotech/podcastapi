@@ -146,8 +146,8 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json);
         }).catch(err => {
+          logStream.write("\n"+err);
           logStream.write("\nError while fetching podcast list - " + userInfo.publisherName);
-          logStream.write("\n" + err);
           resolve([]);
         });
       })
@@ -166,6 +166,7 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json);
         }).catch(err => {
+          logStream.write("\n"+err);
           logStream.write("\nError while fetching episode list - " + userInfo.publisherName);
           resolve([]);
         });
@@ -198,6 +199,7 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json.data);
         }).catch(err => {
+          logStream.write("\n"+err);
           logStream.write("\nError while fetching collection list - " + userInfo.publisherName);
           resolve([]);
         });
@@ -500,7 +502,7 @@ let PublisherCronjob = {
         }).then((json) => {
           resolve(json.data);
         }).catch(err => {
-          console.log(err);
+          console.log("\n"+err);
           logStream.write("\nError while fetching group list - " + userInfo.publisherName);
           resolve([]);
         });
