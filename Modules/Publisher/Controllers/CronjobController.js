@@ -516,8 +516,14 @@ let PublisherCronjob = {
           Accept: '*/*',
           Authorization: userInfo.sgTokenType + ' ' + userInfo.sgAccessToken
         }
-        fetch(url, { method: 'GET', headers: headers}).then((res) => {
-          return res.json()
+        fetch(url, { method: 'GET', headers: headers}).then(async (res) => {
+          let contentType = res.headers.get("content-type");
+          if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
+            return res.json();
+          } else {
+            let test = await updateAccessToken(userInfo);
+            return {data: []};
+          }
         }).then((json) => {
           resolve(json.data);
         }).catch(err => {
