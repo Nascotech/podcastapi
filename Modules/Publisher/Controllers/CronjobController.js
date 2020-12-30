@@ -332,25 +332,21 @@ let PublisherCronjob = {
         // let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
         // let fileName = 'episode_img_' + episodeInfo.guid.value;
         // let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
-        EpisodesModel.findOne({"guid": episodeInfo.guid.value, podcast: podcast.id}).then(episodeModel => {
-          if(!episodeModel) episodeModel = new EpisodesModel();
-          episodeModel.podcast = podcast.id;
-          episodeModel.publisher = podcast.publisher;
-          episodeModel.sgPodcastId = podcast.podcastId;
-          episodeModel.title = episodeInfo.title;
-          episodeModel.description = episodeInfo.description;
-          episodeModel.guid = episodeInfo.guid.value;
-          episodeModel.url = episodeInfo.url;
-          episodeModel.type = episodeInfo.type;
-          episodeModel.length = episodeInfo.length;
-          episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
-          episodeModel.image = (episodeInfo.image && episodeInfo.image.link) ? episodeInfo.image.link : '';
-          episodeModel.pubDate = new Date(episodeInfo.pubDate);
-          episodeModel.save().then(result => {
-            resolve(true);
-          }).catch(err => {
-            if(err) reject(err);
-          });
+        let episodeModel = new EpisodesModel();
+        episodeModel.podcast = podcast.id;
+        episodeModel.publisher = podcast.publisher;
+        episodeModel.sgPodcastId = podcast.podcastId;
+        episodeModel.title = episodeInfo.title;
+        episodeModel.description = episodeInfo.description;
+        episodeModel.guid = episodeInfo.guid.value;
+        episodeModel.url = episodeInfo.url;
+        episodeModel.type = episodeInfo.type;
+        episodeModel.length = episodeInfo.length;
+        episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
+        episodeModel.image = (episodeInfo.image && episodeInfo.image.link) ? episodeInfo.image.link : '';
+        episodeModel.pubDate = new Date(episodeInfo.pubDate);
+        episodeModel.save().then(result => {
+          resolve(true);
         }).catch(err => {
           if(err) reject(err);
         });
