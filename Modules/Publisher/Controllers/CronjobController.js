@@ -147,7 +147,7 @@ let PublisherCronjob = {
           if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
             return res.json();
           } else {
-            let test = await updateAccessToken(userInfo);
+            await updateAccessToken(userInfo);
             return {data: []};
           }
         }).then(result => {
@@ -173,7 +173,7 @@ let PublisherCronjob = {
           if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
             return res.json();
           } else {
-            let test = await updateAccessToken(userInfo);
+            await updateAccessToken(userInfo);
             return {data: []};
           }
         }).then((json) => {
@@ -199,7 +199,7 @@ let PublisherCronjob = {
           if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
             return res.json();
           } else {
-            let test = await updateAccessToken(userInfo);
+            await updateAccessToken(userInfo);
             return {data: []};
           }
         }).then((json) => {
@@ -454,7 +454,7 @@ let PublisherCronjob = {
         let atunwaUser = await UserModel.findOne({'sgUsername': "pthakur@plenartech.com", 'role': roleModel.id});
         let list = await fetchGroupsList(atunwaUser);
         users.forEach(async user => {
-          let test = await updateUserGroups(list, user);
+          await updateUserGroups(list, user);
           count++;
           if (users.length == count) {
             resolve(true);
@@ -470,7 +470,7 @@ let PublisherCronjob = {
           await GroupsModel.deleteMany({"publisher": userInfo.id});
           let count = 0;
           groupFiltered.forEach(async groupInfo => {
-            let test = await addGroupInfoDatabase(groupInfo, userInfo);
+            await addGroupInfoDatabase(groupInfo, userInfo);
             count++;
             if (groupFiltered.length == count) {
               resolve(true);
@@ -517,7 +517,7 @@ let PublisherCronjob = {
           if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
             return res.json();
           } else {
-            let test = await updateAccessToken(userInfo);
+            await updateAccessToken(userInfo);
             return {data: []};
           }
         }).then((json) => {
