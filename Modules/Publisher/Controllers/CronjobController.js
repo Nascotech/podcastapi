@@ -30,6 +30,16 @@ let s3 = new aws.S3({
   endpoint: spacesEndpoint
 });
 let cronjobStartTime = `UTC Time: ${Date()} \nIndia Time: ${new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})} \nUSA Time: ${new Date().toLocaleString("en-US", {timeZone: "America/New_York"})}`;
+let nodemailer = require('nodemailer');
+let transporter = nodemailer.createTransport({
+  host: varConst.SMTP_HOST_NAME,
+  port: varConst.SMTP_PORT,
+  secure: true, // true for 465, false for other ports
+  auth: {
+    user: varConst.SMTP_USERNAME, // generated ethereal user
+    pass: varConst.SMTP_PASSWORD // generated ethereal password
+  }
+});
 
 //Models
 let UserModel = mongoose.model(constants.UserModel);
@@ -566,6 +576,26 @@ function updateAccessToken(userInfo) {
       if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
         return res.json();
       } else {
+        let string = 'Publisher Name: <b>' + userInfo.publisherName + '</b>' +
+        '<p>Base URL: <b>' + userInfo.sgBaseUrl + '</b></p>' +
+        '<p>Username: <b>' + userInfo.sgUsername + '</b></p>' +
+        '<p>Client Id: <b>' + userInfo.sgClientId + '</b></p>' +
+        '<p>Scope: <b>' + userInfo.sgScope + '</b></p>' +
+        '<p>Clien Secret: <b>' + userInfo.sgClientSecret + '</b></p>' +
+        '<p>Password: <b>' + userInfo.sgPassword + '</b></p>' +
+        '<p>Grant Type: <b>' + userInfo.sgGrantType + '</b></p>' +
+        '<p>Token Type: <b>' + userInfo.sgTokenType + '</b></p>' +
+        '<br><p> --------------- Error While Generate Refresh Token --------------- </p>' +
+        '<p>Status Code: <b>' + res.status + '</b></p>' +
+        '<p>Status Text: <b>' + res.statusText + '</b></p>';
+
+        await transporter.sendMail({
+          from: varConst.MAIL_FROM,
+          to: varConst.ADMIN_EMAIL,
+          subject: 'Error while fetching refresh token - ' + userInfo.publisherName,
+          text: 'Error',
+          html: string
+        }).then(info => console.log("mail send")).catch(err => console.log("Error:", err));
         return false;
       }
     }).then(async result => {

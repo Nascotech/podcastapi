@@ -54,5 +54,13 @@ exports.MJ_MAIL_FROM = defaultConfig["from_mail"];
 
 exports.FORGOT_PASSWORD_MAIL = 1548379;
 
+//default mail config
+exports.SMTP_HOST_NAME = "mail.plenartech.com";
+exports.SMTP_PORT = 465;
+exports.SMTP_USERNAME = "akshay.sangani@plenartech.com"
+exports.SMTP_PASSWORD = "l3k6T0vFCDEA";
+exports.MAIL_FROM = "akshay.sangani@plenartech.com";
+exports.ADMIN_EMAIL = ["pthakur@plenartech.com", "akshay@thetatechnolabs.com"];
+
 //podcast base url
 exports.PODCAST_BASE_URL = "https://atunwadigital-recast.streamguys1.com/";
