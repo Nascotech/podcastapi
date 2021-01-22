@@ -30,8 +30,8 @@ let PodcastController = require('./Controllers/PodcastController');
 //   CronjobController.syncGroupList();
 // });
 
-//every 1 hour cron job will sync podcast list
-cron.schedule('0 0 */1 * * *', async () => {
+//every 4 hour cron job will sync podcast list
+cron.schedule('0 0 */4 * * *', async () => {
   await CronjobController.syncPodcastList();
   await CronjobController.syncGroupList();
 });
