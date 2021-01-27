@@ -33,7 +33,6 @@ let PodcastController = require('./Controllers/PodcastController');
 //every 4 hour cron job will sync podcast list
 cron.schedule('0 0 */4 * * *', async () => {
   await CronjobController.syncPodcastList();
-  await CronjobController.syncGroupList();
 });
 
 let userUpload = multer({
@@ -65,7 +64,4 @@ module.exports = function (router) {
     router.get('/api/getPodcastEpisodes/:podcastId', VerifyRecastToken, PodcastController.getPodcastEpisodes);
     router.get('/api/getGroups', VerifyRecastToken, PodcastController.getGroups);
     router.get('/api/userGroups/:publisherId', VerifySuperAdmin, PodcastController.userGroups);
-
-    router.get('/api/test', CronjobController.syncPodcastList);
-    router.get('/api/test2', CronjobController.syncGroupList);
 };

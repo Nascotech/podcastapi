@@ -31,6 +31,7 @@ let schema = new Schema({
     user: {type: Number},
     createdBy: {type: String},
     createdAt: {type: String},
+    imageSync: {type: Number},
     createdAtTimestamp: {type: String},
     updatedAt: {type: String},
     updatedAtTimestamp: {type: String},

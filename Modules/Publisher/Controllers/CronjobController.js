@@ -254,9 +254,9 @@ let PublisherCronjob = {
 
     function updatePodcast(podcast, userInfo, collectionInfo) {
       return new Promise(async function (resolve, reject) {
-        let dirName = 'uploads/publisher_' + userInfo.id + '/podcast_' + podcast.id + '/';
-        let fileName = 'poscast_img_' + podcast.id;
-        let newImage = (podcast.image) ? await imageResize(podcast.image, dirName, fileName) : podcast.image;
+        // let dirName = 'uploads/publisher_' + userInfo.id + '/podcast_' + podcast.id + '/';
+        // let fileName = 'poscast_img_' + podcast.id;
+        // let newImage = (podcast.image) ? await imageResize(podcast.image, dirName, fileName) : podcast.image;
         PodcastsModel.findOne({"publisher": userInfo.id, podcastId: podcast.id}).then(podcastsModel => {
           if(!podcastsModel) podcastsModel = new PodcastsModel();
           podcastsModel.podcastId = podcast.id;
@@ -270,12 +270,13 @@ let PublisherCronjob = {
           podcastsModel.xmlFilename = podcast.xmlFilename;
           podcastsModel.prefixUrl = podcast.prefixUrl;
           podcastsModel.limit = podcast.limit;
-          podcastsModel.image = newImage;
+          podcastsModel.image = (podcast.image) ? podcast.image : '';
           podcastsModel.rssFeed = podcast.rssFeed;
           podcastsModel.categories = podcast.categories;
           podcastsModel.syndications = podcast.syndications;
           podcastsModel.group = podcast.group;
           podcastsModel.user = podcast.user;
+          podcastsModel.imageSync = varConst.INACTIVE;
           podcastsModel.createdBy = podcast.createdBy;
           podcastsModel.createdAt = podcast.createdAt;
           podcastsModel.createdAtTimestamp = podcast.createdAtTimestamp;
@@ -381,37 +382,6 @@ let PublisherCronjob = {
       });
     }
 
-    function imageResize(imageUrl, pathName, name) {
-      return new Promise(async function (resolve, reject) {
-        await axios({ url: imageUrl, responseType: "arraybuffer" }).then(function (response) {
-          if(response.status == 200) {
-            let ext = path.extname(imageUrl);
-            sharp(response.data).resize(240,240).toBuffer().then( result => {
-              let params = {
-                Bucket: masterConfig['BUCKET_NAME'],
-                Key: pathName + name + ext,
-                ACL: "public-read",
-                Body: result,
-              };
-              s3.upload(params, function (s3Err, data) {
-                if (s3Err) {
-                  resolve(imageUrl);
-                } else {
-                  resolve(data.Location);
-                }
-              });
-            }).catch( err => {
-              resolve(imageUrl);
-            });
-          } else {
-            resolve(imageUrl);
-          }
-        }).catch(function (error) {
-          resolve(imageUrl);
-        });
-      });
-    }
-
     function emptyS3Directory(dirName) {
       return new Promise(async function (resolve, reject) {
         let currentData;
@@ -438,6 +408,7 @@ let PublisherCronjob = {
     }
 
     RoleUserModel().then(users => {
+      console.log("\n======================== START PODCAST & EPISODES CRONJOB ================================");
       logStream.write("\n======================== START PODCAST & EPISODES CRONJOB ================================");
       logStream.write("\n" + cronjobStartTime);
       if(users.length > 0) {
@@ -445,19 +416,73 @@ let PublisherCronjob = {
       } else {
         return true;
       }
-    }).then(result => {
+    }).then(async result => {
       console.log("Podcasts sync successfully");
       logStream.write("\nPodcasts sync successfully");
       logStream.write("\n======================== END PODCAST & EPISODES CRONJOB ================================");
+      console.log("\n======================== END PODCAST & EPISODES CRONJOB ================================");
+      await updatePublisherGroups();
+    }).then(async result => {
+      await updatePodcastImages();
     }).catch(err => {
       console.log(err);
       logStream.write("\n"+err);
       logStream.write("\n======================== END PODCAST & EPISODES CRONJOB ================================");
+      console.log("\n======================== END PODCAST & EPISODES CRONJOB ================================");
     });
   },
+};
+module.exports = PublisherCronjob;
 
-  syncGroupList: function (request, response) {
+function updateAccessToken(userInfo) {
+  return new Promise(function (resolve, reject) {
+    let url = userInfo.sgBaseUrl + 'oauth/token';
+    const form = new FormData();
+    form.append('client_secret', userInfo.sgClientSecret);
+    form.append('refresh_token', userInfo.sgRefreshToken);
+    form.append('scope', userInfo.sgScope);
+    form.append('client_id', userInfo.sgClientId);
+    form.append('grant_type', "refresh_token");
+    fetch(url, { method: 'POST', body: form}).then(async (res) => {
+      let contentType = res.headers.get("content-type");
+      if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
+        return res.json();
+      } else {
+        let string = 'Publisher Name: <b>' + userInfo.publisherName + '</b>' +
+        '<p>Base URL: <b>' + userInfo.sgBaseUrl + '</b></p>' +
+        '<p>Username: <b>' + userInfo.sgUsername + '</b></p>' +
+        '<p>Client Id: <b>' + userInfo.sgClientId + '</b></p>' +
+        '<p>Scope: <b>' + userInfo.sgScope + '</b></p>' +
+        '<p>Clien Secret: <b>' + userInfo.sgClientSecret + '</b></p>' +
+        '<p>Password: <b>' + userInfo.sgPassword + '</b></p>' +
+        '<p>Grant Type: <b>' + userInfo.sgGrantType + '</b></p>' +
+        '<p>Token Type: <b>' + userInfo.sgTokenType + '</b></p>' +
+        '<br><p> --------------- Error While Generate Refresh Token --------------- </p>' +
+        '<p>Status Code: <b>' + res.status + '</b></p>' +
+        '<p>Status Text: <b>' + res.statusText + '</b></p>';
 
+        await transporter.sendMail({
+          from: varConst.MAIL_FROM,
+          to: varConst.ADMIN_EMAIL,
+          subject: 'Error while fetching refresh token - ' + userInfo.publisherName,
+          text: 'Error',
+          html: string
+        }).then(info => console.log("mail send")).catch(err => console.log("Error:", err));
+        return false;
+      }
+    }).then(async result => {
+      if(result) await UserModel.updateOne({'_id': userInfo.id}, {$set: {"sgTokenType": result.token_type, "sgAccessToken": result.access_token, "sgRefreshToken": result.refresh_token}});
+      resolve(result);
+    }).catch(err => {
+      logStream.write("\nError while fetching refresh token - " + userInfo.publisherName);
+      logStream.write("\n"+err);
+      reject(false);
+    });
+  });
+}
+
+function updatePublisherGroups() {
+  return new Promise(function (resolve, reject) {
     function getAllUsers(users) {
       return new Promise(async function (resolve, reject) {
         let count = 0;
@@ -550,61 +575,98 @@ let PublisherCronjob = {
         return true;
       }
     }).then(result => {
-      console.log("Groups sync successfully");
+      resolve(true);
       logStream.write("\nGroups sync successfully");
       logStream.write("\n======================== END GROUPS CRONJOB ================================");
     }).catch(err => {
-      console.log(err);
+      resolve(true);
       logStream.write("\n"+err);
       logStream.write("\n======================== END GROUPS CRONJOB ================================");
     });
-  }
-};
-module.exports = PublisherCronjob;
+  });
+}
 
-function updateAccessToken(userInfo) {
+function updatePodcastImages() {
   return new Promise(function (resolve, reject) {
-    let url = userInfo.sgBaseUrl + 'oauth/token';
-    const form = new FormData();
-    form.append('client_secret', userInfo.sgClientSecret);
-    form.append('refresh_token', userInfo.sgRefreshToken);
-    form.append('scope', userInfo.sgScope);
-    form.append('client_id', userInfo.sgClientId);
-    form.append('grant_type', "refresh_token");
-    fetch(url, { method: 'POST', body: form}).then(async (res) => {
-      let contentType = res.headers.get("content-type");
-      if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
-        return res.json();
-      } else {
-        let string = 'Publisher Name: <b>' + userInfo.publisherName + '</b>' +
-        '<p>Base URL: <b>' + userInfo.sgBaseUrl + '</b></p>' +
-        '<p>Username: <b>' + userInfo.sgUsername + '</b></p>' +
-        '<p>Client Id: <b>' + userInfo.sgClientId + '</b></p>' +
-        '<p>Scope: <b>' + userInfo.sgScope + '</b></p>' +
-        '<p>Clien Secret: <b>' + userInfo.sgClientSecret + '</b></p>' +
-        '<p>Password: <b>' + userInfo.sgPassword + '</b></p>' +
-        '<p>Grant Type: <b>' + userInfo.sgGrantType + '</b></p>' +
-        '<p>Token Type: <b>' + userInfo.sgTokenType + '</b></p>' +
-        '<br><p> --------------- Error While Generate Refresh Token --------------- </p>' +
-        '<p>Status Code: <b>' + res.status + '</b></p>' +
-        '<p>Status Text: <b>' + res.statusText + '</b></p>';
 
-        await transporter.sendMail({
-          from: varConst.MAIL_FROM,
-          to: varConst.ADMIN_EMAIL,
-          subject: 'Error while fetching refresh token - ' + userInfo.publisherName,
-          text: 'Error',
-          html: string
-        }).then(info => console.log("mail send")).catch(err => console.log("Error:", err));
-        return false;
+    function getAllPodcastImages() {
+      return new Promise(function (resolve, reject) {
+        PodcastsModel.find({"imageSync": varConst.INACTIVE, 'image':{$exists: true, $ne: null}}, {publisher: true, podcastId: true, image: true}).then(result => {
+          resolve(result);
+        }).catch(err => {
+          if(err) reject(err);
+        });
+      });
+    }
+
+    function compressImages(list) {
+      return new Promise(function (resolve, reject) {
+        if(list.length > 0) {
+          let count = 0;
+          list.forEach(async info => {
+            let dirName = 'uploads/publisher_' + info.publisher + '/podcast_' + info.podcastId + '/';
+            let fileName = 'poscast_img_' + info.podcastId;
+            await imageResize(info.image, dirName, fileName, info._id);
+            count++;
+            if (list.length == count) {
+              resolve(true);
+            }
+          });
+        } else {
+          resolve(true);
+        }
+      });
+    }
+
+    function imageResize(imageUrl, pathName, name, modelId) {
+      return new Promise(async function (resolve, reject) {
+        await axios({ url: imageUrl, responseType: "arraybuffer" }).then(function (response) {
+          if(response.status == 200) {
+            let ext = path.extname(imageUrl);
+            sharp(response.data).resize(240,240).toBuffer().then(async result => {
+              let params = {
+                Bucket: masterConfig['BUCKET_NAME'],
+                Key: pathName + name + ext,
+                ACL: "public-read",
+                Body: result,
+              };
+              await s3.upload(params, async function (s3Err, data) {
+                if (s3Err) {
+                  resolve(true);
+                } else {
+                  await PodcastsModel.updateOne({"_id": modelId}, {$set: {"image" : data.Location, 'imageSync': varConst.ACTIVE}});
+                  resolve(true);
+                }
+              });
+            }).catch( err => {
+              resolve(imageUrl);
+            });
+          } else {
+            resolve(imageUrl);
+          }
+        }).catch(function (error) {
+          resolve(imageUrl);
+        });
+      });
+    }
+
+    getAllPodcastImages().then(list => {
+      logStream.write("\n======================== START IMAGE COMPRESSION CRONJOB ================================");
+      logStream.write("\n" + cronjobStartTime);
+      if(list.length > 0) {
+        return compressImages(list);
+      } else {
+        return true;
       }
-    }).then(async result => {
-      if(result) await UserModel.updateOne({'_id': userInfo.id}, {$set: {"sgTokenType": result.token_type, "sgAccessToken": result.access_token, "sgRefreshToken": result.refresh_token}});
-      resolve(result);
+    }).then(result => {
+      resolve(true);
+      logStream.write("\nImages sync successfully");
+      logStream.write("\n======================== END IMAGE COMPRESSION CRONJOB ================================");
     }).catch(err => {
-      logStream.write("\nError while fetching refresh token - " + userInfo.publisherName);
+      resolve(true);
+      console.log(err);
       logStream.write("\n"+err);
-      reject(false);
+      logStream.write("\n======================== END IMAGE COMPRESSION CRONJOB ================================");
     });
   });
 }
