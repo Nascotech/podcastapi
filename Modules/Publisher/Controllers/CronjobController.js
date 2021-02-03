@@ -410,6 +410,7 @@ let PublisherCronjob = {
     }
 
     RoleUserModel().then(users => {
+      console.log("\n");
       console.log("\n======================== START PODCAST & EPISODES CRONJOB ================================");
       logStream.write("\n======================== START PODCAST & EPISODES CRONJOB ================================");
       logStream.write("\n" + cronjobStartTime);
@@ -419,13 +420,13 @@ let PublisherCronjob = {
         return true;
       }
     }).then(async result => {
-      console.log("Podcasts sync successfully");
-      logStream.write("\nPodcasts sync successfully");
+      console.log("Podcasts & episodes sync successfully");
+      logStream.write("\nPodcasts & episodes sync successfully");
+      return await updatePublisherGroups();
+    }).then(async result => {
+     await updatePodcastImages();
       logStream.write("\n======================== END PODCAST & EPISODES CRONJOB ================================");
       console.log("\n======================== END PODCAST & EPISODES CRONJOB ================================");
-      await updatePublisherGroups();
-    }).then(async result => {
-      await updatePodcastImages();
     }).catch(err => {
       console.log(err);
       logStream.write("\n"+err);
@@ -440,11 +441,12 @@ function updateAccessToken(userInfo) {
   return new Promise(function (resolve, reject) {
     let url = userInfo.sgBaseUrl + 'oauth/token';
     const form = new FormData();
+    form.append('username', userInfo.sgUsername);
     form.append('client_secret', userInfo.sgClientSecret);
-    form.append('refresh_token', userInfo.sgRefreshToken);
+    form.append('grant_type', userInfo.sgGrantType);
     form.append('scope', userInfo.sgScope);
     form.append('client_id', userInfo.sgClientId);
-    form.append('grant_type', "refresh_token");
+    form.append('password', userInfo.sgPassword);
     fetch(url, { method: 'POST', body: form}).then(async (res) => {
       let contentType = res.headers.get("content-type");
       if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
@@ -569,8 +571,8 @@ function updatePublisherGroups() {
     }
 
     RoleUserModel().then(users => {
-      logStream.write("\n======================== START GROUPS CRONJOB ================================");
-      logStream.write("\n" + cronjobStartTime);
+      logStream.write("\n");
+      logStream.write("\n          ***** START GROUPS CRONJOB *****");
       if(users.length > 0) {
         return getAllUsers(users);
       } else {
@@ -578,12 +580,12 @@ function updatePublisherGroups() {
       }
     }).then(result => {
       resolve(true);
-      logStream.write("\nGroups sync successfully");
-      logStream.write("\n======================== END GROUPS CRONJOB ================================");
+      logStream.write("\n          Groups sync successfully");
+      logStream.write("\n          ***** END GROUPS CRONJOB *****");
     }).catch(err => {
       resolve(true);
       logStream.write("\n"+err);
-      logStream.write("\n======================== END GROUPS CRONJOB ================================");
+      logStream.write("\n          ***** END GROUPS CRONJOB *****");
     });
   });
 }
@@ -653,8 +655,8 @@ function updatePodcastImages() {
     }
 
     getAllPodcastImages().then(list => {
-      logStream.write("\n======================== START IMAGE COMPRESSION CRONJOB ================================");
-      logStream.write("\n" + cronjobStartTime);
+      logStream.write("\n");
+      logStream.write("\n          ***** START IMAGE COMPRESSION CRONJOB *****");
       if(list.length > 0) {
         return compressImages(list);
       } else {
@@ -662,13 +664,13 @@ function updatePodcastImages() {
       }
     }).then(result => {
       resolve(true);
-      logStream.write("\nImages sync successfully");
-      logStream.write("\n======================== END IMAGE COMPRESSION CRONJOB ================================");
+      logStream.write("\n          Images sync successfully");
+      logStream.write("\n          ***** END IMAGE COMPRESSION CRONJOB *****");
     }).catch(err => {
       resolve(true);
       console.log(err);
       logStream.write("\n"+err);
-      logStream.write("\n======================== END IMAGE COMPRESSION CRONJOB ================================");
+      logStream.write("\n          ***** END IMAGE COMPRESSION CRONJOB *****");
     });
   });
 }
