@@ -17,6 +17,7 @@ let schema = new Schema({
     podcastId: {type: Number},
     guid: {type: String},
     name: {type: String},
+    slug: {type: String, required: true},
     description: {type: String},
     language: {type: String},
     link: {type: String},
