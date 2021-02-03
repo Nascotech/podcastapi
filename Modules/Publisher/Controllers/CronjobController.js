@@ -305,6 +305,7 @@ let PublisherCronjob = {
     function fetchEpisodeList(userInfo, podcast) {
       return new Promise(async function (resolve, reject) {
         let firstEpisodeList = await fetchEpisode(userInfo, podcast, 1) || [];
+        console.log("First podcast -- " + userInfo.publisherName + ' - ' + podcast.name + ' - ' + firstEpisodeList.data.length);
         if(firstEpisodeList && firstEpisodeList.meta && firstEpisodeList.meta.last_page > 1) {
           resolve(fetchRemainingEpisodes(userInfo, podcast, firstEpisodeList.meta.last_page, firstEpisodeList.data));
         } else {
@@ -319,6 +320,7 @@ let PublisherCronjob = {
           let result = await fetchEpisode(userInfo, podcast, i);
           newEpisodeArr = await newEpisodeArr.concat(result.data);
         }
+        console.log("All podcast -- " + userInfo.publisherName + ' - ' + podcast.name + ' - ' + newEpisodeArr.length);
         resolve(syncEpisodesListIntoDatabase(newEpisodeArr, podcast));
       });
     }
