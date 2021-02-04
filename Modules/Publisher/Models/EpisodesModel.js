@@ -17,7 +17,10 @@ let schema = new Schema({
     sgPodcastId: {type: Number, required: true},
     title: {type: String, required: true},
     description: {type: String},
-    guid: {type: String, required: true},
+    guid: {
+      value: {type: String, required: true},
+      permaLink: {type: Boolean}
+    },
     duration: {type: String},
     url: {type: String},
     type: {type: String},

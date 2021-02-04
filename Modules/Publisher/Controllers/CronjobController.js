@@ -23,6 +23,7 @@ let varConst = require('../../../Utils/Constants');
 let stringConstants = require('../../../Utils/StringConstants');
 let responseHandler = require('../../../Utils/ResponseHandler');
 let arrayDiff = require('simple-array-diff');
+let objArrayDiff = require("fast-array-diff");
 let masterConfig = require('../../../Configs/masterConfig.json');
 let spacesEndpoint = new aws.Endpoint(masterConfig['LINODE_END_POINT']);
 let s3 = new aws.S3({
@@ -255,9 +256,6 @@ let PublisherCronjob = {
 
     function updatePodcast(podcast, userInfo, collectionInfo) {
       return new Promise(async function (resolve, reject) {
-        // let dirName = 'uploads/publisher_' + userInfo.id + '/podcast_' + podcast.id + '/';
-        // let fileName = 'poscast_img_' + podcast.id;
-        // let newImage = (podcast.image) ? await imageResize(podcast.image, dirName, fileName) : podcast.image;
         PodcastsModel.findOne({"publisher": userInfo.id, podcastId: podcast.id}).then(podcastsModel => {
           if(!podcastsModel) podcastsModel = new PodcastsModel();
           podcastsModel.podcastId = podcast.id;
@@ -289,8 +287,9 @@ let PublisherCronjob = {
           podcastsModel.lighterColor = podcast.lighterColor;
           podcastsModel.fontSelect = podcast.fontSelect;
           podcastsModel.save().then(async result => {
-            await EpisodesModel.deleteMany({"podcast": result.id});
-            return await fetchEpisodeList(userInfo, result);
+            let oldEpisodeArr = await fetchOldEpisodeList(result._id);
+            //await EpisodesModel.deleteMany({"podcast": result.id});
+            return await fetchEpisodeList(userInfo, result, oldEpisodeArr);
           }).then(result => {
             resolve(true);
           }).catch(err => {
@@ -302,35 +301,51 @@ let PublisherCronjob = {
       });
     }
 
-    function fetchEpisodeList(userInfo, podcast) {
+    function fetchEpisodeList(userInfo, podcast, oldEpisodeArr) {
       return new Promise(async function (resolve, reject) {
         let firstEpisodeList = await fetchEpisode(userInfo, podcast, 1) || [];
-        console.log("First podcast -- " + userInfo.publisherName + ' - ' + podcast.name + ' - ' + firstEpisodeList.data.length);
         if(firstEpisodeList && firstEpisodeList.meta && firstEpisodeList.meta.last_page > 1) {
-          resolve(fetchRemainingEpisodes(userInfo, podcast, firstEpisodeList.meta.last_page, firstEpisodeList.data));
+          resolve(fetchRemainingEpisodes(userInfo, podcast, firstEpisodeList.meta.last_page, firstEpisodeList.data, oldEpisodeArr));
         } else {
-          resolve(syncEpisodesListIntoDatabase(firstEpisodeList.data, podcast));
+          resolve(syncEpisodesListIntoDatabase(userInfo, JSON.stringify(firstEpisodeList.data), podcast, oldEpisodeArr));
         }
       });
     }
 
-    function fetchRemainingEpisodes(userInfo, podcast, lastPage, newEpisodeArr) {
+    function fetchRemainingEpisodes(userInfo, podcast, lastPage, newEpisodeArr, oldEpisodeArr) {
       return new Promise(async function (resolve, reject) {
         for (let i = 2; i <= lastPage; i++) {
           let result = await fetchEpisode(userInfo, podcast, i);
           newEpisodeArr = await newEpisodeArr.concat(result.data);
         }
-        console.log("All podcast -- " + userInfo.publisherName + ' - ' + podcast.name + ' - ' + newEpisodeArr.length);
-        resolve(syncEpisodesListIntoDatabase(newEpisodeArr, podcast));
+        resolve(syncEpisodesListIntoDatabase(userInfo, JSON.stringify(newEpisodeArr), podcast, oldEpisodeArr));
       });
     }
 
-    function syncEpisodesListIntoDatabase(episodeList, podcast) {
-      return new Promise(function (resolve, reject) {
-        if(Array.isArray(episodeList) && episodeList.length && episodeList.length > 0) {
+    function compare(oldEpisode, newEpisode) {
+      return (oldEpisode.guid.value == newEpisode.guid.value);
+    }
+
+    function syncEpisodesListIntoDatabase(userInfo, episodeList, podcast, oldEpisodeArr) {
+      return new Promise(async function (resolve, reject) {
+        let result = await objArrayDiff.diff(JSON.parse(oldEpisodeArr), JSON.parse(episodeList), compare);
+        let removedEpisode = (result.removed.length > 0) ? await removeEpisodeFromDatabase(result.removed, podcast) : true;
+        let addEpisode = (result.added.length > 0) ? await addNewEpisodes(result.added, podcast) : true;
+
+        if(addEpisode && removedEpisode) {
+          resolve(true);
+        } else {
+          reject(false);
+        }
+      });
+    }
+
+    function addNewEpisodes(episodeList, podcast) {
+      return new Promise(async function (resolve, reject) {
+        if(episodeList.length > 0) {
           let count = 0;
-          episodeList.forEach(async episodeInfo => {
-            await updateEpisode(episodeInfo, podcast);
+          episodeList.forEach(async episode => {
+            await updateEpisode(episode, podcast)
             count++;
             if (episodeList.length == count) {
               resolve(true);
@@ -339,11 +354,37 @@ let PublisherCronjob = {
         } else {
           resolve(true);
         }
-      })
+      });
+    }
+
+    function removeEpisodeFromDatabase(episodeList, podcast) {
+      return new Promise(function (resolve, reject) {
+        let count = 0;
+        episodeList.forEach(async episode => {
+          await EpisodesModel.deleteOne({publisher: podcast.publisher, sgPodcastId: podcast.podcastId, 'guid.value': episode.guid.value});
+          count++;
+          if (episodeList.length == count) {
+            resolve(true);
+          }
+        });
+      });
+    }
+
+    function fetchOldEpisodeList(podcastId) {
+      return new Promise(function (resolve, reject) {
+        EpisodesModel.find({"podcast": podcastId}).exec(function (err, result) {
+          if (err) reject(err);
+          if(result.length > 0) {
+            resolve(JSON.stringify(result));
+          } else {
+            resolve('[]');
+          }
+        });
+      });
     }
 
     function updateEpisode(episodeInfo, podcast) {
-      return new Promise(async function (resolve, reject) {
+      return new Promise(function (resolve, reject) {
         // let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
         // let fileName = 'episode_img_' + episodeInfo.guid.value;
         // let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
@@ -353,13 +394,12 @@ let PublisherCronjob = {
         episodeModel.sgPodcastId = podcast.podcastId;
         episodeModel.title = episodeInfo.title;
         episodeModel.description = episodeInfo.description;
-        episodeModel.guid = episodeInfo.guid.value;
+        episodeModel.guid = episodeInfo.guid;
         episodeModel.url = episodeInfo.enclosure.url;
         episodeModel.type = episodeInfo.type;
         episodeModel.length = episodeInfo.length;
         episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
         episodeModel.image = (episodeInfo.image && episodeInfo.image.link) ? episodeInfo.image.link : '';
-        //episodeModel.image = newImage;
         episodeModel.pubDate = new Date(episodeInfo.pubDate);
         episodeModel.save().then(result => {
           resolve(true);
@@ -426,7 +466,7 @@ let PublisherCronjob = {
       logStream.write("\nPodcasts & episodes sync successfully");
       return await updatePublisherGroups();
     }).then(async result => {
-     await updatePodcastImages();
+      await updatePodcastImages();
       logStream.write("\n======================== END PODCAST & EPISODES CRONJOB ================================");
       console.log("\n======================== END PODCAST & EPISODES CRONJOB ================================");
     }).catch(err => {
