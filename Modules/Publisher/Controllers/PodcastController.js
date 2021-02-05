@@ -24,7 +24,7 @@ let PodcastCtrl = {
     let input = request.body;
     let params = request.params;
 
-    PodcastsModel.findOne({"publisher": input.userId, 'podcastId': params.podcastId}).then(result => {
+    PodcastsModel.findOne({"publisher": input.userId, 'slug': params.slug}).then(result => {
       responseHandler.sendSuccess(response, result);
     }).catch(err => {
       if(err) responseHandler.sendInternalServerError(response, err, err.name);
@@ -81,14 +81,14 @@ let PodcastCtrl = {
     });
   },
 
-  getPodcastEpisodes: function (request, response) {
+  getPodcastEpisodes: async function (request, response) {
 
     let params = request.params;
     let input = request.body;
     let queryP = request.query;
     let pageNo = (queryP.pageNo != null && queryP.pageNo != '' && queryP.pageNo != 0 && queryP.pageNo != "undefined") ? queryP.pageNo : 1;
-
-    let query = {"publisher": input.userId, 'sgPodcastId': params.podcastId};
+    let podcastModel = await PodcastsModel.findOne({"publisher": input.userId, 'slug': params.slug});
+    let query = {"publisher": input.userId, 'sgPodcastId': podcastModel.podcastId};
 
     async.parallel({
       count: function (callback) {

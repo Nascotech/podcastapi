@@ -60,8 +60,8 @@ module.exports = function (router) {
 
     //podcasts APIs
     router.post('/api/getPodcasts', VerifyRecastToken, PodcastController.getPodcasts);
-    router.get('/api/getPodcastDetails/:podcastId', VerifyRecastToken, PodcastController.getPodcastDetails);
-    router.get('/api/getPodcastEpisodes/:podcastId', VerifyRecastToken, PodcastController.getPodcastEpisodes);
+    router.get('/api/getPodcastDetails/:slug', VerifyRecastToken, PodcastController.getPodcastDetails);
+    router.get('/api/getPodcastEpisodes/:slug', VerifyRecastToken, PodcastController.getPodcastEpisodes);
     router.get('/api/getGroups', VerifyRecastToken, PodcastController.getGroups);
     router.get('/api/userGroups/:publisherId', VerifySuperAdmin, PodcastController.userGroups);
 };
