@@ -18,7 +18,7 @@ let schema = new Schema({
     title: {type: String, required: true},
     description: {type: String},
     guid: {
-      value: {type: String, required: true},
+      value: {type: String},
       permaLink: {type: Boolean}
     },
     duration: {type: String},
