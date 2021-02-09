@@ -334,7 +334,7 @@ let PublisherCronjob = {
         // let removedEpisode = (result.removed.length > 0) ? await removeEpisodeFromDatabase(result.removed, podcast) : true;
         let addEpisode = (result.added.length > 0) ? await addNewEpisodes(result.added, podcast) : true;
 
-        if(addEpisode && removedEpisode) {
+        if(addEpisode) {
           return resolve(true);
         } else {
           return reject(false);
