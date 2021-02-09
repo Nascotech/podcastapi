@@ -491,7 +491,7 @@ function updateAccessToken(userInfo) {
     form.append('scope', userInfo.sgScope);
     form.append('client_id', userInfo.sgClientId);
     form.append('password', userInfo.sgPassword);
-    fetch(url, { method: 'POST', body: form}).then(async (res) => {
+    fetch(url, { method: 'POST', body: form}).then((res) => {
       let contentType = res.headers.get("content-type");
       if(res.status == 200 && contentType && contentType.indexOf("application/json") !== -1) {
         return res.json();
@@ -509,7 +509,7 @@ function updateAccessToken(userInfo) {
         '<p>Status Code: <b>' + res.status + '</b></p>' +
         '<p>Status Text: <b>' + res.statusText + '</b></p>';
 
-        await transporter.sendMail({
+        transporter.sendMail({
           from: varConst.MAIL_FROM,
           to: varConst.ADMIN_EMAIL,
           subject: 'Error while fetching refresh token - ' + userInfo.publisherName,
