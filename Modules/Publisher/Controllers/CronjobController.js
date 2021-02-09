@@ -289,14 +289,16 @@ let PublisherCronjob = {
           podcastsModel.save().then(async result => {
             let oldEpisodeArr = await fetchOldEpisodeList(result._id);
             //await EpisodesModel.deleteMany({"podcast": result.id});
-            return await fetchEpisodeList(userInfo, result, oldEpisodeArr);
-          }).then(result => {
-            resolve(true);
+            await fetchEpisodeList(userInfo, result, oldEpisodeArr).then(result => {
+              return resolve(true);
+            }).catch(err => {
+              if(err) return reject(err);
+            });
           }).catch(err => {
-            if(err) reject(err);
+            if(err) return reject(err);
           });
         }).catch(err => {
-          if(err) reject(err);
+          if(err) return reject(err);
         });
       });
     }
@@ -305,9 +307,9 @@ let PublisherCronjob = {
       return new Promise(async function (resolve, reject) {
         let firstEpisodeList = await fetchEpisode(userInfo, podcast, 1) || [];
         if(firstEpisodeList && firstEpisodeList.meta && firstEpisodeList.meta.last_page > 1) {
-          resolve(fetchRemainingEpisodes(userInfo, podcast, firstEpisodeList.meta.last_page, firstEpisodeList.data, oldEpisodeArr));
+          return resolve(fetchRemainingEpisodes(userInfo, podcast, firstEpisodeList.meta.last_page, firstEpisodeList.data, oldEpisodeArr));
         } else {
-          resolve(syncEpisodesListIntoDatabase(userInfo, JSON.stringify(firstEpisodeList.data), podcast, oldEpisodeArr));
+          return resolve(syncEpisodesListIntoDatabase(userInfo, JSON.stringify(firstEpisodeList.data), podcast, oldEpisodeArr));
         }
       });
     }
@@ -318,7 +320,7 @@ let PublisherCronjob = {
           let result = await fetchEpisode(userInfo, podcast, i);
           newEpisodeArr = await newEpisodeArr.concat(result.data);
         }
-        resolve(syncEpisodesListIntoDatabase(userInfo, JSON.stringify(newEpisodeArr), podcast, oldEpisodeArr));
+        return resolve(syncEpisodesListIntoDatabase(userInfo, JSON.stringify(newEpisodeArr), podcast, oldEpisodeArr));
       });
     }
 
@@ -333,9 +335,9 @@ let PublisherCronjob = {
         let addEpisode = (result.added.length > 0) ? await addNewEpisodes(result.added, podcast) : true;
 
         if(addEpisode && removedEpisode) {
-          resolve(true);
+          return resolve(true);
         } else {
-          reject(false);
+          return reject(false);
         }
       });
     }
@@ -348,11 +350,11 @@ let PublisherCronjob = {
             await updateEpisode(episode, podcast)
             count++;
             if (episodeList.length == count) {
-              resolve(true);
+              return resolve(true);
             }
           });
         } else {
-          resolve(true);
+          return resolve(true);
         }
       });
     }
@@ -364,7 +366,7 @@ let PublisherCronjob = {
           await EpisodesModel.deleteOne({publisher: podcast.publisher, sgPodcastId: podcast.podcastId, 'guid.value': episode.guid.value});
           count++;
           if (episodeList.length == count) {
-            resolve(true);
+            return resolve(true);
           }
         });
       });
@@ -375,9 +377,9 @@ let PublisherCronjob = {
         EpisodesModel.find({"podcast": podcastId}).exec(function (err, result) {
           if (err) reject(err);
           if(result.length > 0) {
-            resolve(JSON.stringify(result));
+            return resolve(JSON.stringify(result));
           } else {
-            resolve('[]');
+            return resolve('[]');
           }
         });
       });
@@ -402,9 +404,9 @@ let PublisherCronjob = {
         episodeModel.image = (episodeInfo.image && episodeInfo.image.link) ? episodeInfo.image.link : '';
         episodeModel.pubDate = new Date(episodeInfo.pubDate);
         episodeModel.save().then(result => {
-          resolve(true);
+          return resolve(true);
         }).catch(err => {
-          if(err) reject(err);
+          if(err) return reject(err);
         });
       });
     }
