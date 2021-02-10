@@ -7,3 +7,4 @@
  require('./Models/PodcastsModel');
  require('./Models/EpisodesModel');
  require('./Models/GroupsModel');
+ require('./Models/OtherEpisodesModel');

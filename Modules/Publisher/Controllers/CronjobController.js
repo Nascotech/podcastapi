@@ -50,6 +50,7 @@ let PodcastsModel = mongoose.model(constants.PodcastsModel);
 let PhotosModel = mongoose.model(constants.PhotosModel);
 let EpisodesModel = mongoose.model(constants.EpisodesModel);
 let GroupsModel = mongoose.model(constants.GroupsModel);
+let OtherEpisodesModel = mongoose.model(constants.OtherEpisodesModel);
 
 let PublisherCronjob = {
 
@@ -390,9 +391,13 @@ let PublisherCronjob = {
         // let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
         // let fileName = 'episode_img_' + episodeInfo.guid.value;
         // let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
-        let episodeModel = new EpisodesModel();
-        episodeModel.podcast = podcast.id;
-        episodeModel.publisher = podcast.publisher;
+        let episodeModel = (episodeInfo.guid.value) ? new EpisodesModel() : new OtherEpisodesModel();
+        if(episodeInfo.guid.value) {
+          episodeModel.podcast = podcast.id;
+          episodeModel.publisher = podcast.publisher;
+        } else {
+          episodeModel.podcastName = podcast.name;
+        }
         episodeModel.sgPodcastId = podcast.podcastId;
         episodeModel.title = episodeInfo.title;
         episodeModel.description = episodeInfo.description;
