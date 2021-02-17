@@ -64,4 +64,5 @@ module.exports = function (router) {
     router.get('/api/getPodcastEpisodes/:slug', VerifyRecastToken, PodcastController.getPodcastEpisodes);
     router.get('/api/getGroups', VerifyRecastToken, PodcastController.getGroups);
     router.get('/api/userGroups/:publisherId', VerifySuperAdmin, PodcastController.userGroups);
+    router.get('/api/sync/manual',CronjobController.syncPodcastList);
 };

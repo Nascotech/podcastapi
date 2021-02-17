@@ -57,6 +57,7 @@ require('./Connections/MongooseConnection');
 /* Add the main Route File */
 app.use(express.static(__dirname + '/public'));
 require('./routes');
+const CronjobController = require("./Modules/Publisher/Controllers/CronjobController");
 if (dev) {
     app.get('/database-backup', (req, res) => {
         res.sendFile('/public/db-backup-list.html', {root: __dirname});
@@ -83,6 +84,7 @@ app.set('port', port);
 if (dev) {
     let server = app.listen(app.get('port'), function () {
         util.log('Express server listening on port ' + server.address().port);
+        CronjobController.syncPodcastList();
     });
 } else {
     https.createServer({

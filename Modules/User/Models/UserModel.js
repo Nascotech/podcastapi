@@ -53,6 +53,9 @@ let schema = new Schema({
     sgRefreshToken: {type: String},
     updatedTokenDate: {type: Date},
     isSync: {type: Number, default: varConst.INACTIVE},  //0=no, 1=yes
+
+    lastSyncDate: {type: Date}
+
 }, {
     collection: constants.UserModel, autoIndex: true, timestamps: true, usePushEach: true,
     toObject: {
@@ -70,10 +73,10 @@ let schema = new Schema({
 });
 schema.plugin(deepPopulate);
 mongoose.plugin(mongooseValidationErrorTransform, {
-  capitalize: true,
-  humanize: true,
-  transform: function(messages) {
-    return messages;
-  }
+    capitalize: true,
+    humanize: true,
+    transform: function (messages) {
+        return messages;
+    }
 });
 mongoose.model(constants.UserModel, schema);
