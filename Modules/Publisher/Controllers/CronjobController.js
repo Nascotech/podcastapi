@@ -470,7 +470,7 @@ let PublisherCronjob = {
                             await updatePublisherGroups();
                             await updatePodcastImages();
                             console.log(` 🏁 ********************* SYNC End FOR ALL Users *********************`)
-                            console.log(fetchTime(syncDate))
+                            console.log(fetchTime(new Date()))
                         }
 
                     } catch (error) {
