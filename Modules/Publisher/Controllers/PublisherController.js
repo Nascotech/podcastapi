@@ -12,6 +12,7 @@ let fs = require('fs');
 let bcrypt = require('bcryptjs');
 let request = require('request');
 let constants = require('../../../Utils/ModelConstants');
+let Helper = require('../../../Helper/Helper');
 let varConst = require('../../../Utils/Constants');
 let stringConstants = require('../../../Utils/StringConstants');
 let responseHandler = require('../../../Utils/ResponseHandler');
@@ -163,6 +164,22 @@ let Publisher = {
           });
         }
       });
+    },
+
+    checkPublisherSlug: function (request, response, next) {
+
+      let input = request.body;
+      let query = Helper.isNotEmpty(input.publisherId) ? {'publisherSlug': input.slug, "_id": {"$ne": input.publisherId}} : {'publisherSlug': input.slug};
+
+      UserModel.findOne(query).then(user => {
+      	if (user) {
+          responseHandler.sendSuccess(response, {"isValid": false, "message": "Already registered with the given name " + input.slug});
+        } else {
+          responseHandler.sendSuccess(response, {"isValid": true, "message": ""});
+        }
+	    }).catch(err => {
+        if(err) responseHandler.sendInternalServerError(response, err, err.name);
+	    });
     },
 
     updateGroup: function (request, response, next) {

@@ -56,6 +56,7 @@ module.exports = function (router) {
     router.get('/api/publisher', VerifySuperAdmin, PublisherController.getPublisherRole, PublisherController.publisherList);
     router.put('/api/publisher/group', VerifySuperAdmin, PublisherController.updateGroup, PublisherController.publisherInfo);
 
+    router.post('/api/checkPublisherSlug', VerifySuperAdmin, PublisherController.checkPublisherSlug);
     router.post('/api/getAccessToken', PublisherController.getPublisherRole, PublisherController.getAccessToken);
 
     //podcasts APIs
