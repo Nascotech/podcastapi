@@ -88,6 +88,7 @@ let Publisher = {
           userModel.email = input.email.toLowerCase();
           userModel.accessToken = randomString(48);
           userModel.publisherName = input.publisherName;
+          userModel.publisherSlug = input.publisherSlug;
           userModel.fullName = input.fullName;
           userModel.homeDomain = input.homeDomain;
           userModel.domain = input.domain;
@@ -133,6 +134,7 @@ let Publisher = {
         } else {
           userModel.email = input.email.toLowerCase();
           userModel.publisherName = input.publisherName;
+          userModel.publisherSlug = input.publisherSlug;
           userModel.homeDomain = input.homeDomain;
           userModel.fullName = input.fullName;
           userModel.domain = input.domain;
