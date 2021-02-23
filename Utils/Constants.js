@@ -21,6 +21,9 @@ exports.FIREBASE_WEB_KEY = "AAAAjAtarnQ:APA91bE50z6x6gfcqizdhxVF8L0FF7cCVfJqYgl2
 exports.ACTIVE = 1;
 exports.INACTIVE = 0;
 
+//default sgUsername
+exports.SG_USERNAME = "pthakur@plenartech.com"
+
 //delete status
 exports.DELETED = 1;
 exports.NOT_DELETED = 0;

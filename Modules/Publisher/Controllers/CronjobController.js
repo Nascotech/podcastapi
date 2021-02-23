@@ -581,7 +581,7 @@ function updatePublisherGroups() {
                 let count = 0;
                 let roleModel = await RolesModel.findOne({slug: varConst.PUBLISHER});
                 let atunwaUser = await UserModel.findOne({
-                    'sgUsername': "pthakur@plenartech.com",
+                    'sgUsername': varConst.SG_USERNAME,
                     'role': roleModel.id
                 });
                 let list = await fetchGroupsList(atunwaUser);

@@ -454,6 +454,7 @@ let Publisher = {
     getAccessToken: function (request, response) {
 
       let input = request.body;
+      let query = Helper.isNotEmpty(input.publisherSlug) ? {'publisherSlug': input.publisherSlug, 'role': input.roleId} : {'sgUsername': varConst.SG_USERNAME, 'role': input.roleId};
 
       let usersProjection = {
         homeDomain: true,
@@ -472,13 +473,13 @@ let Publisher = {
         googleCode: true
       };
 
-      UserModel.findOne({'role': input.roleId, 'domain': input.domain}, usersProjection).populate('photo favIcon').exec(function (err, result) {
+      UserModel.findOne(query, usersProjection).populate('photo favIcon').exec(function (err, result) {
         if (err) {
           responseHandler.sendInternalServerError(response, err, err.name);
         } else if(result) {
           responseHandler.sendSuccess(response, result);
         } else {
-          responseHandler.sendSuccess(response, "", "Domain is not bind with this server");
+          responseHandler.sendSuccess(response, "", "Publisher ID not found");
         }
       });
     },
