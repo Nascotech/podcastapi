@@ -35,7 +35,6 @@ let schema = new Schema({
     registeredDate: {type: String}, //yyyy-mm-dd
     publisherName: {type: String},
     publisherSlug: {type: String},
-    domain: {type: String},
     sgBaseUrl: {type: String},
     sgUsername: {type: String},
     sgClientSecret: {type: String},
