@@ -307,10 +307,8 @@ let PublisherCronjob = {
             function syncEpisodesListIntoDatabase(userInfo, episodeList, podcast, oldEpisodeArr) {
                 return new Promise(async function (resolve, reject) {
                     let result = await objArrayDiff.diff(JSON.parse(oldEpisodeArr), JSON.parse(episodeList), compare);
-                    let removedEpisode = (result.removed.length > 0) ? await removeEpisodeFromDatabase(result.removed, podcast) : true;
                     let addEpisode = (result.added.length > 0) ? await addNewEpisodes(result.added, podcast) : true;
-
-                    if (removedEpisode && addEpisode) {
+                    if (addEpisode) {
                         return resolve(true);
                     } else {
                         return reject(false);
@@ -366,33 +364,38 @@ let PublisherCronjob = {
             }
 
             function updateEpisode(episodeInfo, podcast) {
-                return new Promise(function (resolve, reject) {
-                    // let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
-                    // let fileNa                                                                                                                                                                                                                                   me = 'episode_img_' + episodeInfo.guid.value;
-                    // let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
-                    let episodeModel = (episodeInfo.guid.value) ? new EpisodesModel() : new OtherEpisodesModel();
-                    if (episodeInfo.guid.value) {
-                        episodeModel.podcast = podcast.id;
-                        episodeModel.publisher = podcast.publisher;
-                    } else {
-                        episodeModel.podcastName = podcast.name;
-                    }
-                    episodeModel.sgPodcastId = podcast.podcastId;
-                    episodeModel.title = episodeInfo.title;
-                    episodeModel.description = episodeInfo.description;
-                    episodeModel.guid = episodeInfo.guid;
-                    episodeModel.url = episodeInfo.enclosure.url;
-                    episodeModel.type = episodeInfo.type;
-                    episodeModel.length = episodeInfo.length;
-                    episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
-                    episodeModel.image = (episodeInfo.image && episodeInfo.image.link) ? episodeInfo.image.link : '';
-                    episodeModel.pubDate = new Date(episodeInfo.pubDate);
-                    episodeModel.save().then(result => {
-                        return resolve(true);
-                    }).catch(err => {
-                        if (err) return reject(err);
-                    });
+              return new Promise(function (resolve, reject) {
+                // let dirName = 'uploads/publisher_' + podcast.publisher + '/podcast_' + podcast.podcastId + '/';
+                // let fileName = 'episode_img_' + episodeInfo.guid.value;
+                // let newImage = (episodeInfo.image && episodeInfo.image.link) ? await imageResize(episodeInfo.image.link, dirName, fileName) : '';
+                EpisodesModel.findOne({"publisher": podcast.publisher, sgPodcastId: podcast.podcastId, 'guid.value': episodeInfo.guid.value}).then(episodeModel => {
+                  if(!episodeModel && !episodeInfo.guid.value) {
+                    episodeModel = new OtherEpisodesModel;
+                    episodeModel.podcastName = podcast.name;
+                  } else if (!episodeModel && episodeInfo.guid.value) {
+                    episodeModel = new EpisodesModel;
+                    episodeModel.podcast = podcast.id;
+                    episodeModel.publisher = podcast.publisher;
+                  }
+                  episodeModel.sgPodcastId = podcast.podcastId;
+                  episodeModel.title = episodeInfo.title;
+                  episodeModel.description = episodeInfo.description;
+                  episodeModel.guid = episodeInfo.guid;
+                  episodeModel.url = episodeInfo.enclosure.url;
+                  episodeModel.type = episodeInfo.type;
+                  episodeModel.length = episodeInfo.length;
+                  episodeModel.duration = episodeInfo['itunes:duration'].replace(/^(?:00:)?0?/, '');
+                  episodeModel.image = (episodeInfo.image && episodeInfo.image.link) ? episodeInfo.image.link : '';
+                  episodeModel.pubDate = new Date(episodeInfo.pubDate);
+                  episodeModel.save().then(result => {
+                      return resolve(true);
+                  }).catch(err => {
+                      if (err) return reject(err);
+                  });
+                }).catch(err => {
+                    if (err) return reject(err);
                 });
+              });
             }
 
             function removePodcastFromDatabase(podcastLists, userInfo) {
