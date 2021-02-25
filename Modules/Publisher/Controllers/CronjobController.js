@@ -307,10 +307,10 @@ let PublisherCronjob = {
             function syncEpisodesListIntoDatabase(userInfo, episodeList, podcast, oldEpisodeArr) {
                 return new Promise(async function (resolve, reject) {
                     let result = await objArrayDiff.diff(JSON.parse(oldEpisodeArr), JSON.parse(episodeList), compare);
-                    // let removedEpisode = (result.removed.length > 0) ? await removeEpisodeFromDatabase(result.removed, podcast) : true;
+                    let removedEpisode = (result.removed.length > 0) ? await removeEpisodeFromDatabase(result.removed, podcast) : true;
                     let addEpisode = (result.added.length > 0) ? await addNewEpisodes(result.added, podcast) : true;
 
-                    if (addEpisode) {
+                    if (removedEpisode && addEpisode) {
                         return resolve(true);
                     } else {
                         return reject(false);
