@@ -35,3 +35,7 @@ By Atunwa
 * Restart server **`$ pm2 restart server.js`**
 * Check API log **`$ pm2 log`**
 * Check status **`$ pm2 status`**
+
+**Server location**
+
+* Step 12: Go to directory **`$ cd /var/www/atunwapodcasts.com/api`**
