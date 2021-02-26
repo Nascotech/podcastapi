@@ -25,12 +25,12 @@ By Atunwa
 **Start Server**
 
 * Step 11 :- Start node server (local)
-**`node server.js`**
+**`$ node server.js`**
 
 **OR**
 
 * Step 11 :- Start node server (live)
-* **`$ npm install pm2 -g`**
+* Install PM2 **`$ npm install pm2 -g`**
 * Start server **`$ pm2 start server.js`**
 * Restart server **`$ pm2 restart server.js`**
 * Check API log **`$ pm2 log`**
