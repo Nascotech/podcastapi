@@ -1,8 +1,7 @@
 # **Podcast Webservices - Node.js** #
 By Atunwa
 
-** Project Link**
-https://gitlab.com/atunwa/podcast-webservices
+**Project Link** : https://gitlab.com/atunwa/podcast-webservices
 
 **Setup Project**
 
