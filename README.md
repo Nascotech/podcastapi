@@ -1,6 +1,6 @@
 # **Podcast Webservices - Node.js** #
 
-This is source code for web Services, which we use for data manipulation & retrieval and SGRecast related communication (sync podcasts & episodes through cronjob) with all logical operation for the Atunwa Digital Platform.
+This is source code for web Services, which we use for data manipulation & retrieval and SGRecast related communication (sync collections, podcasts, podcast episodes and groups through cronjob) with all logical operation for the Atunwa Digital Platform.
 
 **Project Link** : https://gitlab.com/atunwa/podcast-webservices
 
