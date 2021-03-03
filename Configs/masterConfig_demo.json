@@ -1,5 +1,6 @@
 {
-  "dev": false,
+  "dev": true,
+  "isStaging": true,
   "mongodb_port": 27017,
   "port": 5000,
   "host": "localhost",
