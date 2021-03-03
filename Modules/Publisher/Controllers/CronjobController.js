@@ -711,7 +711,7 @@ function updatePodcastImages() {
                     let count = 0;
                     list.forEach(async info => {
                       let mainDir = masterConfig['dev'] ? "staging/uploads/publisher_" : "uploads/publisher_";
-                      let dirName = mainDir + info.publisher + '/podcast_' + info.podcastId + '/' ? ;
+                      let dirName = mainDir + info.publisher + '/podcast_' + info.podcastId + '/';
                       let fileName = 'poscast_img_' + info.podcastId;
                       await imageResize(info.image, dirName, fileName, info._id);
                       count++;
