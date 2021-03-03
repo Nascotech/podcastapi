@@ -30,6 +30,9 @@ let schema = new Schema({
     groupId: {type: Number},
     podcastsGroups: [{type: Number}],
 
+    headerScript: {type: String},
+    bodyScript: {type: String},
+
     //sgrecast credentials
     homeDomain: {type: String}, //yyyy-mm-dd
     registeredDate: {type: String}, //yyyy-mm-dd

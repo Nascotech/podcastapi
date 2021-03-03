@@ -98,6 +98,8 @@ let Publisher = {
           userModel.role = input.roleId;
           userModel.sgUsername = input.sgUsername.toLowerCase();
           userModel.sgBaseUrl = input.sgBaseUrl;
+          userModel.headerScript = (input.headerScript != null && input.headerScript != '' && input.headerScript != "undefined") ? input.headerScript : '';
+          userModel.bodyScript = (input.bodyScript != null && input.bodyScript != '' && input.bodyScript != "undefined") ? input.bodyScript : '';
           userModel.sgScope = input.sgScope;
           userModel.googleCode = input.googleCode;
           userModel.sgClientId = input.sgClientId;
@@ -142,6 +144,8 @@ let Publisher = {
           userModel.sgUsername = input.sgUsername.toLowerCase();
           userModel.sgBaseUrl = input.sgBaseUrl;
           userModel.sgScope = input.sgScope;
+          userModel.headerScript = (input.headerScript != null && input.headerScript != '' && input.headerScript != "undefined") ? input.headerScript : '';
+          userModel.bodyScript = (input.bodyScript != null && input.bodyScript != '' && input.bodyScript != "undefined") ? input.bodyScript : '';
           userModel.googleCode = input.googleCode;
           userModel.sgClientId = input.sgClientId;
           userModel.sgGrantType = input.sgGrantType;
