@@ -710,13 +710,14 @@ function updatePodcastImages() {
                 if (list.length > 0) {
                     let count = 0;
                     list.forEach(async info => {
-                        let dirName = 'uploads/publisher_' + info.publisher + '/podcast_' + info.podcastId + '/';
-                        let fileName = 'poscast_img_' + info.podcastId;
-                        await imageResize(info.image, dirName, fileName, info._id);
-                        count++;
-                        if (list.length == count) {
-                            resolve(true);
-                        }
+                      let mainDir = masterConfig['dev'] ? "staging/uploads/publisher_" : "uploads/publisher_";
+                      let dirName = mainDir + info.publisher + '/podcast_' + info.podcastId + '/' ? ;
+                      let fileName = 'poscast_img_' + info.podcastId;
+                      await imageResize(info.image, dirName, fileName, info._id);
+                      count++;
+                      if (list.length == count) {
+                          resolve(true);
+                      }
                     });
                 } else {
                     resolve(true);
