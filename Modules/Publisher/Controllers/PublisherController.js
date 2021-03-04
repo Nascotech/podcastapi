@@ -466,6 +466,8 @@ let Publisher = {
         accessToken: true,
         firstName: true,
         lastName: true,
+        headerScript: true,
+        bodyScript: true,
         fullName: true,
         photo: true,
         termsOfUse: true,
