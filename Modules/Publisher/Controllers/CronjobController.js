@@ -414,7 +414,7 @@ let PublisherCronjob = {
                     });
                 });
             }
-
+            
             function emptyS3Directory(dirName) {
                 return new Promise(async function (resolve, reject) {
                     let currentData;
@@ -477,15 +477,20 @@ let PublisherCronjob = {
                         }
 
                     } catch (error) {
-                        console.error(" ❌ ********************* SYNC Failed **************", error.stack || error)
-                        await sync()
-                    }
 
+                        console.log(" ❌ ********************* SYNC Failed **************", error.stack || error)                       
+                        await delay(1000);
+                        await sync();                    
+                    }
+                    
+                    
                 }
 
             } catch (error) {
-                console.error(" ❌ ********************* SYNC Failed **************", error.stack || error)
+                console.error(" ❌ ********************* SYNC Failed **************", error.stack || error) 
+                
             }
+            
 
             function fetchTime(syncDate) {
                 return `UTC Time: ${syncDate} \nIndia Time: ${syncDate.toLocaleString("en-US", {timeZone: "Asia/Kolkata"})} \nUSA Time: ${syncDate.toLocaleString("en-US", {timeZone: "America/New_York"})}`
@@ -521,6 +526,7 @@ let PublisherCronjob = {
 ;
 module.exports = PublisherCronjob;
 
+const delay = time => new Promise(res=>setTimeout(res,time));
 function updateAccessToken(userInfo) {
     return new Promise(function (resolve, reject) {
         let url = userInfo.sgBaseUrl + 'oauth/token';
